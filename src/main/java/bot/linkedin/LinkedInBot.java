@@ -6,6 +6,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
+import static bot.utils.ThroatUtils.throatMedium;
 import static bot.utils.Utils.sleep;
 
 @Log4j2
@@ -23,8 +24,7 @@ public class LinkedInBot extends BasePage implements ApplicationRunner {
 
 	@Override
 	public void run(ApplicationArguments args) {
-		filter.setSearchQuery("java");
-		applier.init();
+		throatMedium();
 		applier.apply(filter);
 		sleep(100000);
 	}

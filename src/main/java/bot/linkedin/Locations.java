@@ -11,4 +11,5 @@ public interface Locations {
 	By CLOSE_WIDGET = By.xpath("//button/span[text()='Done']");
 	By CONTINUE_APPLYING = By.xpath("//span[text()='Continue applying']");
 	By JOB_CARDS_LOCATION = new By.ByCssSelector("div.job-card-container");
+
 }

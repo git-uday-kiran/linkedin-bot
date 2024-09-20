@@ -1,12 +1,14 @@
 package bot.linkedin;
 
-import bot.enums.*;
+import bot.enums.EasyApplyOption;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 import static bot.utils.ThroatUtils.*;
 
@@ -27,14 +29,18 @@ public class Tasks extends BasePage {
 
 	public void login() {
 		log.info("Signing in....");
-		driver.findElement(By.linkText("Sign in")).click();
-		WebElement username = driver.findElement(By.id("username"));
-		WebElement password = driver.findElement(By.id("password"));
-		username.sendKeys(email);
-		password.sendKeys(this.password);
-		WebElement signIn = driver.findElement(By.xpath("/html/body/div/main/div[2]/div[1]/form/div[3]/button"));
-		signIn.click();
-		log.info("Successfully logged in :)");
+		Optional<WebElement> op = findOptional(By.linkText("Sign in"));
+		if (op.isPresent()) {
+			WebElement username = driver.findElement(By.id("username"));
+			WebElement password = driver.findElement(By.id("password"));
+			username.sendKeys(email);
+			password.sendKeys(this.password);
+			WebElement signIn = driver.findElement(By.xpath("/html/body/div/main/div[2]/div[1]/form/div[3]/button"));
+			signIn.click();
+			log.info("Successfully logged in :)");
+		} else {
+			log.warn("Sign in button not found");
+		}
 	}
 
 	public void clickJobs() {
@@ -60,51 +66,6 @@ public class Tasks extends BasePage {
 		throatLow();
 	}
 
-	public void clickSortBy() {
-		log.info("Clicking all sort by options...");
-		for (var posted : SortBy.values()) {
-			throatLow();
-			click(posted.getLocation());
-		}
-	}
-
-	public void clickDatePosted() {
-		log.info("Clicking all data posted options...");
-		for (var posted : DatePosted.values()) {
-			throatLow();
-			click(posted.getLocation());
-		}
-	}
-
-	public void clickExperienceLevel() {
-		log.info("Clicking all experience levels...");
-		for (var level : ExperienceLevel.values()) {
-			throatLow();
-			click(level.getLocation());
-		}
-	}
-
-	public void clickJobTypes() {
-		log.info("Clicking all job types...");
-		for (var jobType : JobType.values()) {
-			throatLow();
-			By location = jobType.getLocation();
-			System.out.println("Clicking.... " + jobType.name());
-			scrollJS(location);
-			click(location);
-		}
-	}
-
-	public void clickRemotes() {
-		log.info("Clicking all remote options...");
-		for (var level : Remote.values()) {
-			throatLow();
-			By location = level.getLocation();
-			scrollJS(location);
-			click(location);
-		}
-	}
-
 	public void applyFilter(JobFilter filter) {
 		clickAdvancedFilters();
 		throatLow();
@@ -113,7 +74,7 @@ public class Tasks extends BasePage {
 		filter.getExperienceLevels().forEach(exp -> click(exp.getLocation()));
 		filter.getJobTypes().forEach(jt -> click(jt.getLocation()));
 		filter.getRemotes().forEach(rt -> click(rt.getLocation()));
-		if (filter.getEasyApply() == EasyApply.ENABLE) {
+		if (filter.getEasyApply() == EasyApplyOption.ENABLE) {
 			click(filter.getEasyApply().getLocation());
 		}
 		if (filter.getUnder10Applicants() == Under10Applicants.ENABLE) {

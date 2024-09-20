@@ -20,7 +20,7 @@ public class JobFilter {
 	private final List<JobType> jobTypes;
 
 	private final List<Remote> remotes;
-	private final EasyApply easyApply;
+	private final EasyApplyOption easyApply;
 	private final List<Location> locations;
 	private final List<Industry> industries;
 	private final List<JobFunction> jobFunctions;

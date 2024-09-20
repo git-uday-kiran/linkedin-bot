@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -16,6 +17,7 @@ import static bot.utils.Utils.*;
 
 @Setter
 @Getter
+@Log4j2
 @AllArgsConstructor
 public class BasePage {
 
@@ -29,8 +31,19 @@ public class BasePage {
 		return tryCatchGet(() -> find(locator));
 	}
 
+	public Optional<WebElement> findClickableOptional(By location) {
+		Optional<WebElement> optional = findOptional(location);
+		if (optional.isPresent()) {
+			WebElement element = optional.get();
+			if (element.isDisplayed() && element.isEnabled()) {
+				return Optional.of(element);
+			}
+		}
+		return Optional.empty();
+	}
+
 	@PostConstruct
-	public void init() {
+	public void postConstruct() {
 		driver.manage().window().maximize();
 		driver.manage().timeouts().pageLoadTimeout(Duration.ofHours(1));
 	}
@@ -44,6 +57,7 @@ public class BasePage {
 		for (By locator : locators) {
 			tryCatch(() -> scrollJS(locator));
 			find(locator).click();
+			log.info("Clicked: {}", locator);
 		}
 	}
 
@@ -55,8 +69,12 @@ public class BasePage {
 	}
 
 	public void scrollJS(By locator) {
+		scrollJS(find(locator));
+	}
+
+	public void scrollJS(WebElement element) {
 		JavascriptExecutor js = (JavascriptExecutor) driver;
-		js.executeScript("arguments[0].scrollIntoView(true);", find(locator));
+		js.executeScript("arguments[0].scrollIntoView();", element);
 	}
 
 	public void scrollDown(double percentage) {
@@ -66,6 +84,16 @@ public class BasePage {
 
 	public void scrollDown() {
 		scrollDown(100);
+	}
+
+	public void scrollBottomOfPage() {
+		JavascriptExecutor js = (JavascriptExecutor) driver;
+		js.executeScript("window.scrollBy(0,document.body.scrollHeight)");
+	}
+
+	public void clickJS(WebElement element) {
+		JavascriptExecutor js = (JavascriptExecutor) driver;
+		js.executeScript("arguments[0].click();", element);
 	}
 
 	public void executeJS(String script, By locator) {

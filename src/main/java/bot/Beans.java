@@ -31,12 +31,13 @@ public class Beans {
 	@Bean
 	JobFilter jobFilter() {
 		return JobFilter.builder()
+			.searchQuery("java")
 			.sortBy(SortBy.MOST_RELEVANT)
 			.datePosted(DatePosted.PAST_24_HOURS)
 			.experienceLevels(List.of(ExperienceLevel.ENTRY_LEVEL, ExperienceLevel.ASSOCIATE))
 			.jobTypes(List.of(JobType.FULL_TIME))
 			.remotes(List.of(Remote.ONSITE, Remote.REMOTE, Remote.HYBRID))
-			.easyApply(EasyApply.ENABLE)
+			.easyApply(EasyApplyOption.ENABLE)
 			.under10Applicants(Under10Applicants.ENABLE)
 			.build();
 	}

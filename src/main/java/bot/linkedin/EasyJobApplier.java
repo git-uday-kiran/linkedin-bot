@@ -1,14 +1,12 @@
 package bot.linkedin;
 
+import bot.linkedin.question_answer.QuestionAnswerService;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Optional;
@@ -17,7 +15,6 @@ import java.util.function.Consumer;
 
 import static bot.linkedin.Locations.*;
 import static bot.utils.ThroatUtils.*;
-import static bot.utils.Utils.tryCatch;
 import static java.util.Objects.requireNonNull;
 
 @Log4j2
@@ -25,18 +22,12 @@ import static java.util.Objects.requireNonNull;
 public class EasyJobApplier extends BasePage {
 
 	private final Tasks tasks;
-	private final Scheduler scheduler;
-	private final SignalManager signalManager;
+	private final QuestionAnswerService questionAnswer;
 
-	public EasyJobApplier(WebDriver driver, SignalManager signalManager, Scheduler scheduler, Tasks tasks) {
+	public EasyJobApplier(WebDriver driver, Tasks tasks, QuestionAnswerService questionAnswer) {
 		super(driver);
 		this.tasks = tasks;
-		this.scheduler = scheduler;
-		this.signalManager = signalManager;
-	}
-
-	public void init() {
-		easyApplicationProcessChecker();
+		this.questionAnswer = questionAnswer;
 	}
 
 	public void apply(JobFilter filter) {
@@ -46,55 +37,27 @@ public class EasyJobApplier extends BasePage {
 		throatMedium();
 		tasks.applyFilter(filter);
 		throatLow();
-		tryCatch(() -> clickEachJobs(this::applyJob));
+		applyRunAway();
 	}
 
-	public void applyJob(WebElement element) {
-		log.info("Applying job... ");
-		Optional<WebElement> optional = findOptional(EASY_APPLY);
-		if (optional.isPresent()) {
-			optional.get().click();
-			signalManager.waitForSignal(SignalManager.Signals.SUBMIT);
-			closeWidget();
-			throatLow();
-		} else {
-			log.warn("Easy Apply option is not there");
+	public void applyRunAway() {
+		clickEachJobs(element -> findOptional(EASY_APPLY).ifPresentOrElse(this::applyJob, easyApplyNotFound()));
+	}
+
+	private Runnable easyApplyNotFound() {
+		return () -> log.warn("Easy Apply not found.");
+	}
+
+	public void applyJob(WebElement easyApplyElement) {
+		log.info("Applying a job... ");
+		easyApplyElement.click();
+		throatMedium();
+		Optional<WidGet> opWidGet = Optional.of(new WidGet(driver, questionAnswer));
+		while (opWidGet.isPresent()) {
+			WidGet widGet = opWidGet.get();
+			widGet.init();
+			opWidGet = widGet.nextWidget();
 		}
-	}
-
-	public void easyApplicationProcessChecker() {
-		continuesClicker(CONTINUE_APPLYING, Duration.ofSeconds(3), "Clicking continue applying option");
-		continuesClicker(NEXT, Duration.ofSeconds(3), "Clicking next option");
-		continuesClicker(REVIEW, Duration.ofSeconds(3), "Clicking review option");
-		continuesClicker(SUBMIT_APPLICATION, Duration.ofSeconds(3), "Clicking submit application option", () -> signalManager.signal(SignalManager.Signals.SUBMIT));
-	}
-
-	public void closeWidget() {
-		log.info("Closing widget...");
-		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-		WebElement doneButton = wait.until(ExpectedConditions.elementToBeClickable(CLOSE_WIDGET));
-		doneButton.click();
-		log.info("Widget closed");
-	}
-
-	public void continuesClicker(By location, Duration period, String message, Runnable action) {
-		Runnable task = () -> {
-			try {
-				findOptional(location).ifPresent(element -> {
-					if (tryCatch(() -> element.isDisplayed() && element.isEnabled())) {
-						log.info(message);
-						element.click();
-						if (action != null) action.run();
-					}
-				});
-			} catch (Exception ignored) {
-			}
-		};
-		scheduler.schedule(task, period);
-	}
-
-	public void continuesClicker(By location, Duration period, String message) {
-		continuesClicker(location, period, message, null);
 	}
 
 	public void clickEachJobs(Consumer<WebElement> consumer) {

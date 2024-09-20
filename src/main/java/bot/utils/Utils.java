@@ -30,12 +30,37 @@ public class Utils {
 		}
 	}
 
+	public static boolean tryIgnore(ThrowableRunnable throwableRunnable) {
+		try {
+			throwableRunnable.run();
+			return true;
+		} catch (Exception exception) {
+			return false;
+		}
+	}
+
 	public static boolean tryCatch(Callable<Boolean> callable) {
 		try {
 			return callable.call();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
+		}
+	}
+
+	public static <T> T tryOrThrow(Callable<T> callable) {
+		try {
+			return callable.call();
+		} catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
+	}
+
+	public static void tryOrThrow(ThrowableRunnable codeBlock) {
+		try {
+			codeBlock.run();
+		} catch (Exception exception) {
+			throw new RuntimeException(exception);
 		}
 	}
 
