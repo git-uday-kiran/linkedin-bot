@@ -1,7 +1,6 @@
 package bot.linkedin;
 
 import bot.enums.*;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -20,12 +19,6 @@ public class Tasks extends BasePage {
 
 	public Tasks(WebDriver driver) {
 		super(driver);
-	}
-
-	@PostConstruct
-	public void init() {
-		super.init();
-		goToHomePage();
 	}
 
 	public void goToHomePage() {

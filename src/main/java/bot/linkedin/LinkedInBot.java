@@ -23,9 +23,9 @@ public class LinkedInBot extends BasePage implements ApplicationRunner {
 
 	@Override
 	public void run(ApplicationArguments args) {
-//		filter.setSearchQuery("java");
-//		applier.init();
-//		applier.apply(filter);
+		filter.setSearchQuery("java");
+		applier.init();
+		applier.apply(filter);
 		sleep(100000);
 	}
 
