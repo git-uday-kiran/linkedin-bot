@@ -1,15 +1,16 @@
 package bot.linkedin;
 
 import bot.enums.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
 @Getter
 @Builder
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class JobFilter {
 
 	private final SortBy sortBy;
@@ -27,6 +28,8 @@ public class JobFilter {
 	private final Under10Applicants under10Applicants;
 	private final InYourNetwork inYourNetwork;
 	private final List<Commitment> commitments;
+	@Setter
+	private String searchQuery;
 
 	public enum Location {
 		BENGALURU, HYDERABAD, PUNE, CHENNAI, BENGALURU_EAST, NOIDA, GURUGRAM, GURGAON, MUMBAI, AHMEDABAD, TRIVANDRUM;

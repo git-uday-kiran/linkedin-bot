@@ -9,8 +9,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.stereotype.Component;
 
-import static bot.utils.ThroatUtils.throatLow;
-import static bot.utils.ThroatUtils.throatMedium;
+import static bot.utils.ThroatUtils.*;
 
 @Log4j2
 @Component
@@ -52,9 +51,8 @@ public class Tasks extends BasePage {
 		throatLow();
 	}
 
-	public void searchJobs(String searchQuery) {
-		clickJobs();
-		log.info("Searching jobs...");
+	public void performSearchQuery(String searchQuery) {
+		log.info("Performing search query: " + searchQuery);
 		By searchLocator = By.xpath("/html/body/div[5]/header/div/div/div/div[2]/div[2]/div/div/input[1]");
 		clickJS(searchLocator);
 		set(searchLocator, searchQuery, Keys.ENTER);
