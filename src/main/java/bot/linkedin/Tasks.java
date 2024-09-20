@@ -17,7 +17,7 @@ import static bot.utils.ThroatUtils.*;
 public class Tasks extends BasePage {
 
 	private final String email = "udaykiran0486@gmail.com";
-	private final String password = "fuck-off";
+	private final String password = "xxxxxx";
 
 	public Tasks(WebDriver driver) {
 		super(driver);
