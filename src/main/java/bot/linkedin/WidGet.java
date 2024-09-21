@@ -1,6 +1,6 @@
 package bot.linkedin;
 
-import bot.linkedin.question_answer.QuestionAnswerService;
+import bot.linkedin.services.QuestionAnswerService;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -10,6 +10,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.*;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static bot.linkedin.Locations.*;
@@ -29,6 +30,7 @@ public class WidGet extends BasePage {
 	}
 
 	public void init() {
+		checkWorkExperienceQuestions();
 		checkRadioButtonQuestions();
 		checkSelectionOptionQuestions();
 		checkCheckBoxOptions();
@@ -38,7 +40,7 @@ public class WidGet extends BasePage {
 	private void checkNormalQuestions() {
 		IntStream.range(0, 10).forEach(q -> {
 			By questionLabel = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + q + ") > .jobs-easy-apply-form-element > div > div > div > label");
-			By questionInput = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + q + ") > .jobs-easy-apply-form-element > div > div > div > input");
+			By questionInput = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + q + ") > .jobs-easy-apply-form-element > div > div > div > :is(input,textarea)");
 			findOptional(questionLabel).ifPresent(question -> {
 				var input = find(questionInput);
 				String answer = questionAnswer.ask(question.getText());
@@ -54,15 +56,19 @@ public class WidGet extends BasePage {
 	}
 
 	private void checkSelectionOptionQuestions() {
-		IntStream.range(0, 10).forEach(q -> {
-			By questionLabel = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + q + ") > .jobs-easy-apply-form-element > div > label > span:first-child");
+		IntStream.range(0, 10).forEach(questionNo -> {
+			By questionLabel = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > div > label > span:first-child");
 			findOptional(questionLabel).ifPresent(question -> {
-				Map<String, WebElement> options = findAllSelectOptions(q).stream().collect(toMap(WebElement::getText, identity()));
+
+				Function<Integer, By> locator = optionNo -> By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > div > select > option:nth-of-type(" + optionNo + ")");
+				Map<String, WebElement> options = findAllSelectOptions(locator).stream().collect(toMap(WebElement::getText, identity()));
+
 				String answer = questionAnswer.ask(question.getText(), options.keySet().toArray(new String[0]));
 				question.click();
 				throatLow();
+
 				if (question.getText().trim().equals("City")) {
-					fillCity(answer, q);
+					fillCity(answer, questionNo);
 				} else {
 					options.get(answer).click();
 				}
@@ -71,19 +77,16 @@ public class WidGet extends BasePage {
 	}
 
 	private void fillCity(String answer, int questionNo) {
-		By inputLocation = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > div > div > input");
+		By inputLocation = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > div > div > :is(input,textarea)");
 		By arrowDown = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > div > div > div:nth-of-type(2)");
 		find(inputLocation).sendKeys(answer, Keys.ENTER);
 		throatMedium();
 		find(arrowDown).sendKeys(Keys.ARROW_DOWN, Keys.ENTER);
 	}
 
-	private Set<WebElement> findAllSelectOptions(int questionNo) {
+	private Set<WebElement> findAllSelectOptions(Function<Integer, By> locationGiver) {
 		Set<WebElement> elements = new HashSet<>();
-		IntStream.range(0, 20).forEach(n -> {
-			By location = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > div > select > option:nth-of-type(" + n + ")");
-			tryCatchGet(() -> driver.findElements(location)).ifPresent(elements::addAll);
-		});
+		IntStream.range(0, 20).forEach(n -> tryCatchGet(() -> driver.findElements(locationGiver.apply(n))).ifPresent(elements::addAll));
 		return elements;
 	}
 
@@ -134,6 +137,34 @@ public class WidGet extends BasePage {
 			tryCatchGet(() -> driver.findElements(location)).ifPresent(elements::addAll);
 		});
 		return elements;
+	}
+
+	private void checkWorkExperienceQuestions() {
+		IntStream.range(0, 20).forEach(q -> {
+			By titleLocation = By.cssSelector("form>div>div>span:nth-of-type(" + (q * 2 + 1) + ")");
+			By subTitleLocation = By.cssSelector("form>div>div>span:nth-of-type(" + (q * 2 + 2) + ")");
+			tryIgnore(() -> {
+				int questionId = q + 1;
+				String title = find(titleLocation).getText();
+				String subTitle = find(subTitleLocation).getText();
+				String question = "\n" + title + "\n" + subTitle;
+
+				By inputLocation = By.cssSelector("form>div>div>div:nth-of-type(" + questionId + ")>div>div>div>div>:is(input,textarea)");
+				findOptional(inputLocation).ifPresent(input -> {
+					String answer = questionAnswer.ask(question);
+					set(inputLocation, answer);
+				});
+
+				By selectOptionLocation = By.cssSelector("form >div>div>div:nth-of-type(" + questionId + ")>div>div>select");
+				Function<Integer, By> optionLocationGiver = optionId -> By.cssSelector("form >div>div>div:nth-of-type(" + questionId + ")>div>div>select>option:nth-of-type(" + optionId + ")");
+				findOptional(selectOptionLocation).ifPresent(select -> {
+					Map<String, WebElement> options = findAllSelectOptions(optionLocationGiver).stream().collect(toMap(WebElement::getText, identity()));
+					String answer = questionAnswer.ask(question, options.keySet());
+					click(select);
+					click(options.get(answer));
+				});
+			});
+		});
 	}
 
 	public Optional<WidGet> nextWidget() {

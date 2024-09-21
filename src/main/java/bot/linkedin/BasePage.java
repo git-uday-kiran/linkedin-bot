@@ -13,7 +13,7 @@ import org.openqa.selenium.WebElement;
 import java.time.Duration;
 import java.util.Optional;
 
-import static bot.utils.Utils.*;
+import static bot.utils.Utils.tryCatchGet;
 
 @Setter
 @Getter
@@ -49,15 +49,24 @@ public class BasePage {
 	}
 
 	public void set(By locator, CharSequence... keys) {
-		find(locator).clear();
-		find(locator).sendKeys(keys);
+		WebElement element = find(locator);
+		element.clear();
+		element.sendKeys(keys);
 	}
 
 	public void click(By... locators) {
 		for (By locator : locators) {
-			tryCatch(() -> scrollJS(locator));
-			find(locator).click();
-			log.info("Clicked: {}", locator);
+			WebElement element = find(locator);
+			scrollJS(element);
+			click(element);
+		}
+	}
+
+	public void click(WebElement... elements) {
+		for (WebElement element : elements) {
+			Object clicked = element.getText().replace('\n', ' ');
+			element.click();
+			log.info("Clicked: {}", clicked);
 		}
 	}
 

@@ -1,4 +1,4 @@
-package bot.linkedin.question_answer;
+package bot.linkedin.services;
 
 import bot.linkedin.BasePage;
 import lombok.extern.log4j.Log4j2;
@@ -19,12 +19,14 @@ import static bot.utils.Utils.*;
 @Service
 public class QuestionAnswerService extends BasePage {
 
+	private final Sounds sounds;
 	private final QuestionAnswerRepo repo;
 	private final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-	public QuestionAnswerService(WebDriver driver, QuestionAnswerRepo repo) {
+	public QuestionAnswerService(WebDriver driver, Sounds sounds, QuestionAnswerRepo repo) {
 		super(driver);
 		this.repo = repo;
+		this.sounds = sounds;
 	}
 
 	public String ask(String question, String message, Collection<String> options) {
@@ -57,6 +59,7 @@ public class QuestionAnswerService extends BasePage {
 	}
 
 	private void askQuestionByInput(String question) {
+		sounds.alert();
 		System.out.print("Input: ");
 		String answer = tryOrThrow(reader::readLine);
 		store(question, answer);
@@ -92,6 +95,7 @@ public class QuestionAnswerService extends BasePage {
 			joiner.add(id + ". " + option);
 			id++;
 		}
+		sounds.alert();
 		System.out.println(joiner);
 		System.out.print("Input: ");
 		String answer = tryOrThrow(reader::readLine);

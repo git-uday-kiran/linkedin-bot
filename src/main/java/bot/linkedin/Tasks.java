@@ -81,6 +81,7 @@ public class Tasks extends BasePage {
 			click(filter.getUnder10Applicants().getLocation());
 		}
 		By apply = By.xpath("/html/body/div[3]/div/div/div[3]/div/button[2]/span");
+		throatMedium();
 		log.info("Applying filter...");
 		click(apply);
 		throatLow();

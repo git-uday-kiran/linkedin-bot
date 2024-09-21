@@ -1,4 +1,4 @@
-package bot.linkedin.question_answer;
+package bot.linkedin.services;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,7 +11,6 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "question_answer")
 public class QuestionAnswer {
 
 	@Id
