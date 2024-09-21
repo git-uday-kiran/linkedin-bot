@@ -2,15 +2,15 @@ package bot.linkedin;
 
 import bot.enums.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.List;
 
 @Getter
-@Builder
 @AllArgsConstructor
+@ConfigurationProperties(prefix = "job.filter")
 public class JobFilter {
 
 	private final SortBy sortBy;

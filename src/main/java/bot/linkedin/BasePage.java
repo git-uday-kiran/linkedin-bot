@@ -105,9 +105,9 @@ public class BasePage {
 		js.executeScript("arguments[0].click();", element);
 	}
 
-	public void executeJS(String script, By locator) {
+	public void executeJS(String script, Object... args) {
 		JavascriptExecutor js = (JavascriptExecutor) driver;
-		js.executeScript(script, find(locator));
+		js.executeScript(script, args);
 	}
 
 }
