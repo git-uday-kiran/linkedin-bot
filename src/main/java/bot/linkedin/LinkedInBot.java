@@ -1,5 +1,6 @@
 package bot.linkedin;
 
+import bot.linkedin.services.JobFilter;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.WebDriver;
 import org.springframework.boot.ApplicationArguments;

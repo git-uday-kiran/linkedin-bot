@@ -1,10 +1,7 @@
 package bot.linkedin;
 
 import bot.enums.EasyApplyOption;
-import bot.linkedin.services.JobsApplied;
-import bot.linkedin.services.JobsAppliedRepo;
-import bot.linkedin.services.QuestionAnswerService;
-import bot.linkedin.services.Sounds;
+import bot.linkedin.services.*;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -30,13 +27,15 @@ public class EasyJobApplier extends BasePage {
 	private final QuestionAnswerService questionAnswer;
 	private final JobsAppliedRepo appliedRepo;
 	private final Sounds sounds;
+	private final JobFilterService jobFilterService;
 
-	public EasyJobApplier(WebDriver driver, Tasks tasks, QuestionAnswerService questionAnswer, JobsAppliedRepo appliedRepo, Sounds sounds) {
+	public EasyJobApplier(WebDriver driver, Tasks tasks, QuestionAnswerService questionAnswer, JobsAppliedRepo appliedRepo, Sounds sounds, JobFilterService jobFilterService) {
 		super(driver);
 		this.tasks = tasks;
 		this.questionAnswer = questionAnswer;
 		this.appliedRepo = appliedRepo;
 		this.sounds = sounds;
+		this.jobFilterService = jobFilterService;
 	}
 
 	public void apply(JobFilter filter) {
@@ -56,9 +55,11 @@ public class EasyJobApplier extends BasePage {
 	}
 
 	private void startCheckingJobs() {
-		scanJobs(
-			job -> findOptional(EASY_APPLY).ifPresentOrElse(this::processEasyApplyElement, easyApplyNotFound())
-		);
+		scanJobs(job -> findOptional(EASY_APPLY).ifPresentOrElse(easyApplyElement -> {
+			if (jobFilterService.canProcess(getJobDescription())) {
+				processEasyApplyElement(easyApplyElement);
+			}
+		}, easyApplyNotFound()));
 	}
 
 	private void processEasyApplyElement(WebElement easyApplyElement) {
@@ -74,7 +75,7 @@ public class EasyJobApplier extends BasePage {
 	}
 
 	public void applyEasyApplyJob(WebElement easyApplyElement) {
-		log.info("Applying a job... ");
+		log.info("Applying job... ");
 		click(easyApplyElement);
 		throatMedium();
 		Optional<WidGet> opWidGet = Optional.of(new WidGet(driver, questionAnswer));

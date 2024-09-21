@@ -1,6 +1,7 @@
-package bot.linkedin;
+package bot.linkedin.services;
 
 import bot.enums.*;
+import bot.linkedin.Under10Applicants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
