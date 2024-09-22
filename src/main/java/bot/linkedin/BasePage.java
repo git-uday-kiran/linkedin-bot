@@ -68,7 +68,6 @@ public class BasePage {
 
 	@PostConstruct
 	public void postConstruct() {
-		driver.manage().window().maximize();
 		driver.manage().timeouts().pageLoadTimeout(Duration.ofHours(1));
 	}
 
@@ -118,13 +117,13 @@ public class BasePage {
 		js.executeScript("arguments[0].scrollIntoView();", element);
 	}
 
-	public void scrollDown(double percentage) {
+	public void scrollDown(double pixels) {
 		JavascriptExecutor js = (JavascriptExecutor) driver;
-		js.executeScript("window.scrollBy(0," + (5 * percentage) + ")", "");
+		js.executeScript("window.scrollBy(0," + pixels + ")", "");
 	}
 
 	public void scrollDown() {
-		scrollDown(100);
+		scrollDown(500);
 	}
 
 	public void scrollBottomOfPage() {

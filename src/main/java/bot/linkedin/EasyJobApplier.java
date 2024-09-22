@@ -60,9 +60,10 @@ public class EasyJobApplier extends BasePage {
 		By showAllLocation = By.cssSelector(".discovery-templates-vertical-list__footer > a");
 		tasks.goToHomePage();
 		tasks.clickJobs();
-		throatMedium();
+
 		IntStream.range(0, 10).forEach(e -> {
-			scrollBottomOfPage();
+			throatHigh();
+			scrollDown(1000);
 			findAllWait(showAllLocation).forEach(showAll -> {
 				tryIgnore(() -> processShowAll(showAll));
 			});
@@ -81,6 +82,7 @@ public class EasyJobApplier extends BasePage {
 
 		tryCatch(this::startCheckingJobs);
 		driver.close();
+		driver.switchTo().window(currentTab);
 		sounds.finished();
 	}
 
