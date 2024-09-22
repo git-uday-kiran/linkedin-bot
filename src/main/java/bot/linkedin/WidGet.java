@@ -38,7 +38,7 @@ public class WidGet extends BasePage {
 	}
 
 	private void checkNormalQuestions() {
-		IntStream.range(0, 10).forEach(q -> {
+		IntStream.range(0, 25).forEach(q -> {
 			By questionLabel = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + q + ") > .jobs-easy-apply-form-element > div > div > div > label");
 			By questionInput = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + q + ") > .jobs-easy-apply-form-element > div > div > div > :is(input,textarea)");
 			findOptional(questionLabel).ifPresent(question -> {
@@ -56,7 +56,7 @@ public class WidGet extends BasePage {
 	}
 
 	private void checkSelectionOptionQuestions() {
-		IntStream.range(0, 10).forEach(questionNo -> {
+		IntStream.range(0, 25).forEach(questionNo -> {
 			By questionLabel = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > div > label > span:first-child");
 			findOptional(questionLabel).ifPresent(question -> {
 
@@ -86,12 +86,12 @@ public class WidGet extends BasePage {
 
 	private Set<WebElement> findAllSelectOptions(Function<Integer, By> locationGiver) {
 		Set<WebElement> elements = new HashSet<>();
-		IntStream.range(0, 20).forEach(n -> tryCatchGet(() -> driver.findElements(locationGiver.apply(n))).ifPresent(elements::addAll));
+		IntStream.range(0, 25).forEach(n -> tryCatchGet(() -> driver.findElements(locationGiver.apply(n))).ifPresent(elements::addAll));
 		return elements;
 	}
 
 	private void checkRadioButtonQuestions() {
-		IntStream.range(0, 20).forEach(q -> {
+		IntStream.range(0, 25).forEach(q -> {
 			By questionLabel = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + q + ") > .jobs-easy-apply-form-element > fieldset > legend > span > span:first-child");
 			findOptional(questionLabel).ifPresent(question -> {
 				Map<String, WebElement> buttons = findAllRadioButtons(q).stream().collect(toMap(WebElement::getText, identity()));
@@ -102,7 +102,7 @@ public class WidGet extends BasePage {
 	}
 
 	private void checkCheckBoxOptions() {
-		IntStream.range(0, 20).forEach(q -> {
+		IntStream.range(0, 25).forEach(q -> {
 			By questionLabel = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + q + ") > .jobs-easy-apply-form-element > fieldset > legend >div> span:first-child");
 			findOptional(questionLabel).ifPresent(question -> {
 				Map<String, WebElement> boxes = findAllCheckBoxes(q).stream().collect(toMap(WebElement::getText, identity()));
@@ -123,7 +123,7 @@ public class WidGet extends BasePage {
 
 	private Set<WebElement> findAllCheckBoxes(int questionNo) {
 		Set<WebElement> elements = new HashSet<>();
-		IntStream.range(0, 20).forEach(n -> {
+		IntStream.range(0, 25).forEach(n -> {
 			By location = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > fieldset > div:nth-of-type(" + n + ") > label");
 			tryCatchGet(() -> driver.findElements(location)).ifPresent(elements::addAll);
 		});
@@ -132,7 +132,7 @@ public class WidGet extends BasePage {
 
 	private Set<WebElement> findAllRadioButtons(int questionNo) {
 		Set<WebElement> elements = new LinkedHashSet<>();
-		IntStream.range(0, 20).forEach(n -> {
+		IntStream.range(0, 25).forEach(n -> {
 			By location = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > fieldset > div:nth-of-type(" + n + ") > label");
 			tryCatchGet(() -> driver.findElements(location)).ifPresent(elements::addAll);
 		});
@@ -140,7 +140,7 @@ public class WidGet extends BasePage {
 	}
 
 	private void checkWorkExperienceQuestions() {
-		IntStream.range(0, 20).forEach(q -> {
+		IntStream.range(0, 25).forEach(q -> {
 			By titleLocation = By.cssSelector("form>div>div>span:nth-of-type(" + (q * 2 + 1) + ")");
 			By subTitleLocation = By.cssSelector("form>div>div>span:nth-of-type(" + (q * 2 + 2) + ")");
 			tryIgnore(() -> {

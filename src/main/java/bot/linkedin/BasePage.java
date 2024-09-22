@@ -1,7 +1,6 @@
 package bot.linkedin;
 
 import jakarta.annotation.PostConstruct;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
@@ -9,8 +8,11 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 
 import static bot.utils.Utils.tryCatchGet;
@@ -18,13 +20,26 @@ import static bot.utils.Utils.tryCatchGet;
 @Setter
 @Getter
 @Log4j2
-@AllArgsConstructor
 public class BasePage {
 
-	public WebDriver driver;
+	public final WebDriver driver;
+	private WebDriverWait wait;
+
+	public BasePage(WebDriver driver) {
+		this.driver = driver;
+		this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+	}
 
 	public WebElement find(By locator) {
 		return driver.findElement(locator);
+	}
+
+	public List<WebElement> findAllWait(By locator) {
+		return wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(locator));
+	}
+
+	public WebElement findWait(By locator) {
+		return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
 	}
 
 	public Optional<WebElement> findOptional(By locator) {
@@ -57,6 +72,14 @@ public class BasePage {
 	public void click(By... locators) {
 		for (By locator : locators) {
 			WebElement element = find(locator);
+			scrollJS(element);
+			click(element);
+		}
+	}
+
+	public void clickWait(By... locators) {
+		for (By locator : locators) {
+			WebElement element = findWait(locator);
 			scrollJS(element);
 			click(element);
 		}

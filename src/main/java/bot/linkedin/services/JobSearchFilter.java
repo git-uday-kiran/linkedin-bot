@@ -11,8 +11,8 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
-@ConfigurationProperties(prefix = "job.filter")
-public class JobFilter {
+@ConfigurationProperties(prefix = "job.search.filter")
+public class JobSearchFilter {
 
 	private final SortBy sortBy;
 	private final DatePosted datePosted;
