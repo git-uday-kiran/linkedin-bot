@@ -31,14 +31,16 @@ public class EasyJobApplier extends BasePage {
 	private final JobsAppliedRepo appliedRepo;
 	private final Sounds sounds;
 	private final JobApplyFilterService filterService;
+	private final CanApplyRepo canApplyRepo;
 
-	public EasyJobApplier(WebDriver driver, Tasks tasks, QuestionAnswerService questionAnswer, JobsAppliedRepo appliedRepo, Sounds sounds, JobApplyFilterService filterService) {
+	public EasyJobApplier(WebDriver driver, Tasks tasks, QuestionAnswerService questionAnswer, JobsAppliedRepo appliedRepo, Sounds sounds, JobApplyFilterService filterService, CanApplyRepo canApplyRepo) {
 		super(driver);
 		this.tasks = tasks;
 		this.questionAnswer = questionAnswer;
 		this.appliedRepo = appliedRepo;
 		this.sounds = sounds;
 		this.filterService = filterService;
+		this.canApplyRepo = canApplyRepo;
 	}
 
 	public void apply(JobSearchFilter filter) {
@@ -52,10 +54,9 @@ public class EasyJobApplier extends BasePage {
 
 		tryCatch(this::startCheckingJobs);
 		sounds.finished();
-		driver.close();
 	}
 
-	public void apply() {
+	public void applyJobsInHomePage() {
 		By showAllLocation = By.cssSelector(".discovery-templates-vertical-list__footer > a");
 		tasks.goToHomePage();
 		tasks.clickJobs();
@@ -67,7 +68,6 @@ public class EasyJobApplier extends BasePage {
 			});
 		});
 		sounds.finished();
-		driver.close();
 	}
 
 	private void processShowAll(WebElement showAll) {
@@ -85,11 +85,16 @@ public class EasyJobApplier extends BasePage {
 	}
 
 	private void startCheckingJobs() {
-		scanJobs(job -> findOptional(EASY_APPLY).ifPresentOrElse(easyApplyElement -> {
-			if (filterService.canProcess(job.getText(), getJobDescription())) {
-				processEasyApplyElement(easyApplyElement);
+		scanJobs(job -> {
+			String jobTitle = job.getText();
+			if (filterService.canProcess(jobTitle, getJobDescription())) {
+				findOptional(EASY_APPLY).ifPresentOrElse(this::processEasyApplyElement, easyApplyNotFound());
+			} else {
+				log.info("Saving this job and job url to database.");
+				String currentUrl = driver.getCurrentUrl();
+				canApplyRepo.save(new CanApply(jobTitle, currentUrl));
 			}
-		}, easyApplyNotFound()));
+		});
 	}
 
 	private void processEasyApplyElement(WebElement easyApplyElement) {
@@ -148,7 +153,7 @@ public class EasyJobApplier extends BasePage {
 			log.info("New page: {}", page);
 			return true;
 		} catch (Exception exception) {
-			log.warn("Next page wasn't found: {}, Message: {}, LocalMessage: {}", page, exception.getMessage(), exception.getLocalizedMessage());
+			log.warn("Next page wasn't found: {}, Message: {}", page, exception.getLocalizedMessage());
 			return false;
 		}
 	}
