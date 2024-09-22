@@ -88,13 +88,27 @@ public class EasyJobApplier extends BasePage {
 		scanJobs(job -> {
 			String jobTitle = job.getText();
 			if (filterService.canProcess(jobTitle, getJobDescription())) {
-				findOptional(EASY_APPLY).ifPresentOrElse(this::processEasyApplyElement, easyApplyNotFound());
-			} else {
-				log.info("Saving this job and job url to database.");
-				String currentUrl = driver.getCurrentUrl();
-				canApplyRepo.save(new CanApply(jobTitle, currentUrl));
+				findOptional(EASY_APPLY).ifPresentOrElse(this::processEasyApplyElement, easyApplyNotFound(jobTitle));
 			}
 		});
+	}
+
+	private Runnable easyApplyNotFound(String jobTitle) {
+		return () -> {
+			log.warn("Easy Apply not found.");
+			if (isApplyLinkAvailable()) saveJobToDb(jobTitle);
+		};
+	}
+
+	private boolean isApplyLinkAvailable() {
+		By locator = By.xpath("//span[text()='Apply']");
+		return !findAllClickable(locator).isEmpty();
+	}
+
+	private void saveJobToDb(String jobTitle) {
+		log.info("Saving this job and job url to database.");
+		String currentUrl = driver.getCurrentUrl();
+		canApplyRepo.save(new CanApply(jobTitle, currentUrl));
 	}
 
 	private void processEasyApplyElement(WebElement easyApplyElement) {
@@ -102,10 +116,6 @@ public class EasyJobApplier extends BasePage {
 		applyEasyApplyJob(easyApplyElement);
 		sounds.appliedJob();
 		appliedRepo.save(new JobsApplied(jobDesc));
-	}
-
-	private Runnable easyApplyNotFound() {
-		return () -> log.warn("Easy Apply not found.");
 	}
 
 	private void applyEasyApplyJob(WebElement easyApplyElement) {

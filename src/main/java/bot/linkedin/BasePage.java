@@ -12,6 +12,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,6 +56,14 @@ public class BasePage {
 			}
 		}
 		return Optional.empty();
+	}
+
+	public List<WebElement> findAllClickable(By locator) {
+		return tryCatchGet(() -> driver.findElements(locator))
+			.map(list -> list.stream()
+				.filter(element -> element.isDisplayed() && element.isEnabled())
+				.toList())
+			.orElse(Collections.emptyList());
 	}
 
 	@PostConstruct

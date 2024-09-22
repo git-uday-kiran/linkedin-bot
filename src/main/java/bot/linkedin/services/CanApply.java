@@ -1,9 +1,6 @@
 package bot.linkedin.services;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,8 +15,10 @@ public class CanApply {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	Long id;
 
+	@Column(nullable = false, columnDefinition = "text(3000)")
 	String jobTitle;
 
+	@Column(nullable = false, columnDefinition = "text(3000)")
 	String jobUrl;
 
 	public CanApply(String jobTitle, String jobUrl) {
