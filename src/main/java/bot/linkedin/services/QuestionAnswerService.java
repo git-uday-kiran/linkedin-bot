@@ -6,6 +6,7 @@ import org.openqa.selenium.WebDriver;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashSet;
@@ -98,8 +99,22 @@ public class QuestionAnswerService extends BasePage {
 		sounds.alert();
 		System.out.println(joiner);
 		System.out.print("Input: ");
-		String answer = tryOrThrow(reader::readLine);
-		store(question, options[Integer.parseInt(answer)]);
+		int input = askInteger();
+		store(question, options[input]);
+	}
+
+	private int askInteger() {
+		int result = Integer.MIN_VALUE;
+		while (result == Integer.MIN_VALUE) {
+			try {
+				result = Integer.parseInt(reader.readLine());
+			} catch (NumberFormatException ignored) {
+				log.info("Please enter number format input.");
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return result;
 	}
 
 }
