@@ -10,6 +10,7 @@ import org.openqa.selenium.WebElement;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -32,8 +33,9 @@ public class EasyJobApplier extends BasePage {
 	private final Sounds sounds;
 	private final JobApplyFilterService filterService;
 	private final CanApplyRepo canApplyRepo;
+	private final JobsDayCountRepo jobsDayCountRepo;
 
-	public EasyJobApplier(WebDriver driver, Tasks tasks, QuestionAnswerService questionAnswer, JobsAppliedRepo appliedRepo, Sounds sounds, JobApplyFilterService filterService, CanApplyRepo canApplyRepo) {
+	public EasyJobApplier(WebDriver driver, Tasks tasks, QuestionAnswerService questionAnswer, JobsAppliedRepo appliedRepo, Sounds sounds, JobApplyFilterService filterService, CanApplyRepo canApplyRepo, JobsDayCountRepo jobsDayCountRepo) {
 		super(driver);
 		this.tasks = tasks;
 		this.questionAnswer = questionAnswer;
@@ -41,6 +43,7 @@ public class EasyJobApplier extends BasePage {
 		this.sounds = sounds;
 		this.filterService = filterService;
 		this.canApplyRepo = canApplyRepo;
+		this.jobsDayCountRepo = jobsDayCountRepo;
 	}
 
 	public void apply(JobSearchFilter filter) {
@@ -118,6 +121,7 @@ public class EasyJobApplier extends BasePage {
 		applyEasyApplyJob(easyApplyElement);
 		sounds.appliedJob();
 		appliedRepo.save(new JobsApplied(jobDesc));
+		jobsDayCountRepo.incrementCountSafely(LocalDate.now());
 	}
 
 	private void applyEasyApplyJob(WebElement easyApplyElement) {
