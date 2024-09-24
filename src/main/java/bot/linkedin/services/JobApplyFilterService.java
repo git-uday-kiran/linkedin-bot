@@ -1,5 +1,6 @@
 package bot.linkedin.services;
 
+import bot.linkedin.filters.JobsApplyFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -29,11 +30,15 @@ public class JobApplyFilterService {
 	}
 
 	private boolean checkJobTitle(String jobTitle) {
-		List<String> foundTitleParts = applyFilter.getJobTitle().getIncludeWords().stream()
-			.filter(jobTitle::contains)
-			.toList();
-		log.info("Found title parts: {}", foundTitleParts);
-		return !foundTitleParts.isEmpty();
+		List<String> includeWords = applyFilter.getJobTitle().getIncludeWords().stream()
+				.filter(jobTitle::contains).toList();
+		log.info("Job title include words found: {}", includeWords);
+
+		List<String> excludeWords = applyFilter.getJobTitle().getExcludeWords().stream()
+				.filter(jobTitle::contains).toList();
+		log.info("Job title exclude words found: {}", excludeWords);
+
+		return !includeWords.isEmpty() && excludeWords.isEmpty();
 	}
 
 	private boolean checkJobDescription(String jobDescription) {
@@ -43,9 +48,9 @@ public class JobApplyFilterService {
 	private boolean excludeWordsNotFound(String jobDescription) {
 		String[] words = jobDescription.split(" ");
 		var excludeWordsFound = stream(words)
-			.map(String::toLowerCase)
-			.filter(applyFilter.getJobDesc().getExcludeWords()::contains)
-			.toList();
+				.map(String::toLowerCase)
+				.filter(applyFilter.getJobDesc().getExcludeWords()::contains)
+				.toList();
 		log.info("Exclude words found: {} ", excludeWordsFound);
 		return excludeWordsFound.isEmpty();
 	}

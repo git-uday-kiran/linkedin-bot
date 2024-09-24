@@ -60,10 +60,10 @@ public class BasePage {
 
 	public List<WebElement> findAllClickable(By locator) {
 		return tryCatchGet(() -> driver.findElements(locator))
-			.map(list -> list.stream()
-				.filter(element -> element.isDisplayed() && element.isEnabled())
-				.toList())
-			.orElse(Collections.emptyList());
+				.map(list -> list.stream()
+						.filter(element -> element.isDisplayed() && element.isEnabled())
+						.toList())
+				.orElse(Collections.emptyList());
 	}
 
 	@PostConstruct
@@ -77,36 +77,51 @@ public class BasePage {
 		element.sendKeys(keys);
 	}
 
-	public void click(By... locators) {
+	public void clickWait(By... locators) {
 		for (By locator : locators) {
-			WebElement element = find(locator);
-			scrollJS(element);
-			click(element);
+			click(findWait(locator));
 		}
 	}
 
-	public void clickWait(By... locators) {
+	public void click(By... locators) {
 		for (By locator : locators) {
-			WebElement element = findWait(locator);
-			scrollJS(element);
-			click(element);
+			click(find(locator));
 		}
 	}
 
 	public void click(WebElement... elements) {
 		for (WebElement element : elements) {
 			Object clicked = element.getText().replace('\n', ' ');
+			scrollJS(element);
+			highlight(elements);
 			element.click();
 			log.info("Clicked: {}", clicked);
 		}
 	}
 
 	public void clickJS(By... locators) {
-		JavascriptExecutor js = (JavascriptExecutor) driver;
 		for (By locator : locators) {
-			js.executeScript("arguments[0].click()", find(locator));
+			clickJS(find(locator));
 		}
 	}
+
+	public void clickJS(WebElement... webElements) {
+		JavascriptExecutor js = (JavascriptExecutor) driver;
+		for (WebElement element : webElements) {
+			scrollJS(element);
+			highlight(webElements);
+			js.executeScript("arguments[0].click();", element);
+		}
+	}
+
+	public void highlight(WebElement... webElements) {
+		String script = "arguments[0].setAttribute('style', 'border: 2px solid yellow')";
+		JavascriptExecutor js = (JavascriptExecutor) driver;
+		for (WebElement webElement : webElements) {
+			js.executeScript(script, webElement);
+		}
+	}
+
 
 	public void scrollJS(By locator) {
 		scrollJS(find(locator));
@@ -131,14 +146,5 @@ public class BasePage {
 		js.executeScript("window.scrollBy(0,document.body.scrollHeight)");
 	}
 
-	public void clickJS(WebElement element) {
-		JavascriptExecutor js = (JavascriptExecutor) driver;
-		js.executeScript("arguments[0].click();", element);
-	}
-
-	public void executeJS(String script, Object... args) {
-		JavascriptExecutor js = (JavascriptExecutor) driver;
-		js.executeScript(script, args);
-	}
 
 }

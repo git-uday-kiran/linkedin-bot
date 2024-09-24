@@ -1,4 +1,4 @@
-package bot.linkedin.services;
+package bot.linkedin.filters;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -14,14 +14,15 @@ public class JobsApplyFilter {
 	private boolean scanJobsInHomePage = false;
 
 	@Data
-	static class JobDescFilter {
+	public static class JobDescFilter {
 		private Set<String> excludeWords;
 		private Set<String> includeWords;
 	}
 
 	@Data
-	static class JobTitleFilter {
+	public static class JobTitleFilter {
 		private Set<String> includeWords;
+		private Set<String> excludeWords;
 	}
 
 }

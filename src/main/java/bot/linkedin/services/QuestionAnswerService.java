@@ -1,6 +1,7 @@
 package bot.linkedin.services;
 
 import bot.linkedin.BasePage;
+import bot.linkedin.models.QuestionAnswer;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.WebDriver;
 import org.springframework.stereotype.Service;
@@ -59,13 +60,6 @@ public class QuestionAnswerService extends BasePage {
 		repo.save(new QuestionAnswer(question, answer));
 	}
 
-	private void askQuestionByInput(String question) {
-		sounds.alert();
-		System.out.print("Input: ");
-		String answer = tryOrThrow(reader::readLine);
-		store(question, answer);
-	}
-
 	public Set<String> askCheckBoxOptionsAndNoCache(String question, Collection<String> optionsCollection) {
 		if (optionsCollection.size() == 1) {
 			return Set.of(ask(question, optionsCollection));
@@ -84,9 +78,16 @@ public class QuestionAnswerService extends BasePage {
 		while (!(line = tryOrThrow(reader::readLine)).isBlank()) {
 			String input = line.trim();
 			tryCatchGet(() -> Integer.parseInt(input))
-				.ifPresentOrElse(e -> result.add(options[e]), () -> System.out.println("Enter number format input."));
+					.ifPresentOrElse(e -> result.add(options[e]), () -> System.out.println("Enter number format input."));
 		}
 		return result;
+	}
+
+	private void askQuestionByInput(String question) {
+		sounds.alert();
+		System.out.print("Input: ");
+		String answer = tryOrThrow(reader::readLine);
+		store(question, answer);
 	}
 
 	private void askQuestionByOption(String question, String[] options) {
@@ -98,18 +99,30 @@ public class QuestionAnswerService extends BasePage {
 		}
 		sounds.alert();
 		System.out.println(joiner);
-		System.out.print("Input: ");
-		int input = askInteger();
+		int input = askRangeInteger(options.length - 1);
 		store(question, options[input]);
+	}
+
+	private int askRangeInteger(int max) {
+		int answer;
+		while (!isInRange((answer = askInteger()), max)) {
+			System.out.println("Please enter an integer between " + 0 + " and " + max + ".");
+		}
+		return answer;
+	}
+
+	private boolean isInRange(int value, int max) {
+		return 0 <= value && value <= max;
 	}
 
 	private int askInteger() {
 		int result = Integer.MIN_VALUE;
 		while (result == Integer.MIN_VALUE) {
 			try {
+				System.out.print("Input: ");
 				result = Integer.parseInt(reader.readLine());
 			} catch (NumberFormatException ignored) {
-				log.info("Please enter number format input.");
+				System.out.println("Please enter number format input.");
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}

@@ -1,4 +1,4 @@
-package bot.linkedin.services;
+package bot.linkedin.filters;
 
 import bot.enums.*;
 import bot.linkedin.Under10Applicants;
@@ -32,9 +32,6 @@ public class JobSearchFilter {
 	@Setter
 	private String searchQuery;
 
-	public enum Location {
-		BENGALURU, HYDERABAD, PUNE, CHENNAI, BENGALURU_EAST, NOIDA, GURUGRAM, GURGAON, MUMBAI, AHMEDABAD, TRIVANDRUM;
-	}
 
 	public enum Industry {
 		IT_SERVICES_AND_IT_CONSULTING, SOFTWARE_DEVELOPMENT, STAFFING_AND_RECRUITING, TECHNOLOGY_INFORMATION_AND_INTERNET,

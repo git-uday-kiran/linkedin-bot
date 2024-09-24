@@ -1,7 +1,7 @@
 package bot.linkedin;
 
 import bot.enums.EasyApplyOption;
-import bot.linkedin.services.JobSearchFilter;
+import bot.linkedin.filters.JobSearchFilter;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -78,6 +78,7 @@ public class Tasks extends BasePage {
 		if (filter.getEasyApply() == EasyApplyOption.ENABLE) {
 			click(filter.getEasyApply().getLocation());
 		}
+		filter.getLocations().forEach(lc -> click(lc.getLocation()));
 		if (filter.getUnder10Applicants() == Under10Applicants.ENABLE) {
 			click(filter.getUnder10Applicants().getLocation());
 		}

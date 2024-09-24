@@ -1,4 +1,4 @@
-package bot.linkedin.services;
+package bot.linkedin.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

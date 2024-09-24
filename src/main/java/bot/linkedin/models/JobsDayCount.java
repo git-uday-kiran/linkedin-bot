@@ -1,4 +1,4 @@
-package bot.linkedin.services;
+package bot.linkedin.models;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

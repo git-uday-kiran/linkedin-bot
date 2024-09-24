@@ -1,8 +1,8 @@
 package bot.linkedin;
 
 import bot.enums.EasyApplyOption;
-import bot.linkedin.services.JobSearchFilter;
-import bot.linkedin.services.JobsApplyFilter;
+import bot.linkedin.filters.JobSearchFilter;
+import bot.linkedin.filters.JobsApplyFilter;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.WebDriver;
 import org.springframework.boot.ApplicationArguments;

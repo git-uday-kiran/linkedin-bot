@@ -1,6 +1,9 @@
 package bot.linkedin;
 
 import bot.enums.EasyApplyOption;
+import bot.linkedin.filters.JobSearchFilter;
+import bot.linkedin.models.CanApply;
+import bot.linkedin.models.JobsApplied;
 import bot.linkedin.services.*;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
