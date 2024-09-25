@@ -5,6 +5,7 @@ import bot.linkedin.filters.JobSearchFilter;
 import bot.linkedin.models.CanApply;
 import bot.linkedin.models.JobsApplied;
 import bot.linkedin.services.*;
+import bot.utils.ThroatUtils;
 import io.vavr.control.Try;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
@@ -103,6 +104,10 @@ public class EasyJobApplier extends BasePage {
 		tabs.removeIf(currentTab::equals);
 		driver.switchTo().window(tabs.get(0));
 
+		throatMedium();
+		tryClick(By.linkText("Easy Apply"))
+				.andThen(ThroatUtils::throatMedium)
+				.orElseRun(error -> log.warn("Tried finding Easy Apply button, but not found."));
 		run(this::startCheckingJobs).orElseRun(log::error);
 		driver.close();
 		driver.switchTo().window(currentTab);
