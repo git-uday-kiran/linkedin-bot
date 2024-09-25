@@ -79,8 +79,13 @@ public class BasePage {
 
 	public void clickWait(By... locators) {
 		for (By locator : locators) {
-			click(findWait(locator));
+			clickWait(findWait(locator));
 		}
+	}
+
+	public void clickWait(WebElement element) {
+		WebElement target = wait.until(ExpectedConditions.elementToBeClickable(element));
+		click(target);
 	}
 
 	public void click(By... locators) {

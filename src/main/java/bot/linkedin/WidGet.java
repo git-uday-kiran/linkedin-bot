@@ -9,6 +9,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.*;
+import java.util.function.BinaryOperator;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -61,7 +62,9 @@ public class WidGet extends BasePage {
 			findOptional(questionLabel).ifPresent(question -> {
 
 				Function<Integer, By> locator = optionNo -> By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > div > select > option:nth-of-type(" + optionNo + ")");
-				Map<String, WebElement> options = findAllSelectOptions(locator).stream().collect(toMap(WebElement::getText, identity()));
+				Map<String, WebElement> options = findAllSelectOptions(locator)
+						.stream()
+						.collect(toMap(WebElement::getText, identity(), (a, b) -> a));
 
 				String answer = questionAnswer.ask(question.getText(), options.keySet().toArray(new String[0]));
 				question.click();

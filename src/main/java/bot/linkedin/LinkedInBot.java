@@ -29,6 +29,9 @@ public class LinkedInBot extends BasePage implements ApplicationRunner {
 	@Override
 	public void run(ApplicationArguments args) {
 		throatMedium();
+		if (applyFilter.isApplyWithoutSearchFilter()) {
+			applier.applyWithoutSearchFilter(searchFilter.getSearchQuery());
+		}
 		if (searchFilter.getEasyApply() == EasyApplyOption.ENABLE) {
 			applier.apply(searchFilter);
 		}

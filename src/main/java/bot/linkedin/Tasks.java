@@ -56,7 +56,7 @@ public class Tasks extends BasePage {
 		By searchLocator = By.xpath("/html/body/div[5]/header/div/div/div/div[2]/div[2]/div/div/input[1]");
 		clickJS(searchLocator);
 		set(searchLocator, searchQuery, Keys.ENTER);
-		throatLow();
+		throatMedium();
 	}
 
 	public void clickAdvancedFilters() {

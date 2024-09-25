@@ -50,7 +50,8 @@ public class EasyJobApplier extends BasePage {
 	}
 
 	public void apply(JobSearchFilter filter) {
-		String searchQuery = requireNonNull(filter.getSearchQuery(), "query can not be null");
+		log.info("Applying easy apply jobs by applying advanced filters");
+		String searchQuery = requireNonNull(filter.getSearchQuery(), "Search query can not be null");
 		Assert.state(filter.getEasyApply() == EasyApplyOption.ENABLE, "Can only apply to easy apply jobs");
 
 		tasks.goToHomePage();
@@ -62,7 +63,19 @@ public class EasyJobApplier extends BasePage {
 		sounds.finished();
 	}
 
+	public void applyWithoutSearchFilter(String searchQuery) {
+		log.info("Applying jobs without search filter");
+		requireNonNull(searchQuery, "Search query can not be null");
+		tasks.goToHomePage();
+		tasks.clickJobs();
+		tasks.performSearchQuery(searchQuery);
+		tryCatch(this::startCheckingJobs);
+		sounds.finished();
+	}
+
+
 	public void applyJobsInHomePage() {
+		log.info("Applying jobs in home page");
 		By showAllLocation = By.cssSelector(".discovery-templates-vertical-list__footer > a");
 		tasks.goToHomePage();
 		tasks.clickJobs();
@@ -79,6 +92,7 @@ public class EasyJobApplier extends BasePage {
 
 	private void processShowAll(WebElement showAll) {
 		showAll.sendKeys(Keys.CONTROL, Keys.RETURN);
+		highlight(showAll);
 		log.info("Clicked: {}", showAll.getText());
 
 		String currentTab = driver.getWindowHandle();
@@ -147,7 +161,7 @@ public class EasyJobApplier extends BasePage {
 			log.info("Found {} jobs", jobs.size());
 
 			for (WebElement job : jobs) {
-				click(job);
+				clickWait(job);
 				if (appliedRepo.existsByJobDesc(getJobDescription())) continue;
 				jobConsumer.accept(job);
 				throatLow();

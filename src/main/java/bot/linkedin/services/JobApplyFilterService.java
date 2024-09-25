@@ -46,20 +46,17 @@ public class JobApplyFilterService {
 	}
 
 	private boolean excludeWordsNotFound(String jobDescription) {
-		String[] words = jobDescription.split(" ");
-		var excludeWordsFound = stream(words)
-				.map(String::toLowerCase)
-				.filter(applyFilter.getJobDesc().getExcludeWords()::contains)
-				.toList();
-		log.info("Exclude words found: {} ", excludeWordsFound);
+		var excludeWordsFound = applyFilter.getJobDesc().getExcludeWords().stream()
+				.filter(jobDescription::contains).toList();
+		log.info("Job description exclude words found: {} ", excludeWordsFound);
 		return excludeWordsFound.isEmpty();
 	}
 
 	private void logProcess(boolean status, String jobTitle, String jobDescription) {
 		if (status) {
-			log.info("Job description is suitable: job title: {{}}, job desc: {{}}", jobTitle, jobDescription);
+			log.info("Job is suitable: job title: {{}}, job desc: {{}}", jobTitle, jobDescription);
 		} else {
-			log.warn("Job description is not suitable: job title: {{}}, job desc: {{}}", jobTitle, jobDescription);
+			log.warn("Job is not suitable: job title: {{}}, job desc: {{}}", jobTitle, jobDescription);
 		}
 	}
 
