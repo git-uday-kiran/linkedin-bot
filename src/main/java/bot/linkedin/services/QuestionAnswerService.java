@@ -9,13 +9,12 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
-import static bot.utils.Utils.*;
+import static io.vavr.control.Try.ofCallable;
 
 @Log4j2
 @Service
@@ -31,20 +30,15 @@ public class QuestionAnswerService extends BasePage {
 		this.sounds = sounds;
 	}
 
-	public String ask(String question, String message, Collection<String> options) {
-		System.out.println(message);
-		return ask(question, options);
+	public String ask(String question) {
+		return ask(question, Collections.emptyList());
 	}
 
-	public String ask(String question, Collection<String> options) {
-		return ask(question, options.toArray(new String[0]));
-	}
-
-	public String ask(String question, String... options) {
+	public String ask(String question, List<String> options) {
 		System.out.println("Question: " + question);
 		var byQuestion = repo.findByQuestion(question);
 		if (byQuestion.isEmpty()) {
-			if (options.length == 0) {
+			if (options.isEmpty()) {
 				askQuestionByInput(question);
 			} else {
 				askQuestionByOption(question, options);
@@ -60,14 +54,13 @@ public class QuestionAnswerService extends BasePage {
 		repo.save(new QuestionAnswer(question, answer));
 	}
 
-	public Set<String> askCheckBoxOptionsAndNoCache(String question, Collection<String> optionsCollection) {
-		if (optionsCollection.size() == 1) {
-			return Set.of(ask(question, optionsCollection));
+	public Set<String> askCheckBoxOptionsAndNoCache(String question, List<String> options) {
+		if (options.size() == 1) {
+			return Set.of(ask(question, options));
 		}
 
-		String[] options = optionsCollection.toArray(new String[0]);
 		StringJoiner joiner = new StringJoiner("\n");
-		IntStream.range(0, options.length).forEach(id -> joiner.add(id + ". " + options[id]));
+		IntStream.range(0, options.size()).forEach(id -> joiner.add(id + ". " + options.get(id)));
 
 		System.out.println("Question: " + question);
 		System.out.println("Enter empty line stop taking inputs.");
@@ -75,22 +68,35 @@ public class QuestionAnswerService extends BasePage {
 
 		String line;
 		Set<String> result = new HashSet<>();
-		while (!(line = tryOrThrow(reader::readLine)).isBlank()) {
-			String input = line.trim();
-			tryCatchGet(() -> Integer.parseInt(input))
-					.ifPresentOrElse(e -> result.add(options[e]), () -> System.out.println("Enter number format input."));
+		while (!(line = ofCallable(reader::readLine).get()).isBlank()) {
+			ofCallable(parseAsInteger(line))
+					.andThen(addOptionToResult(options, result))
+					.orElseRun(handleNumberFormatException());
 		}
 		return result;
 	}
 
+	private static Consumer<Throwable> handleNumberFormatException() {
+		return error -> System.out.println("Enter number format input.");
+	}
+
+	private static Callable<Integer> parseAsInteger(String line) {
+		return () -> Integer.parseInt(line.trim());
+	}
+
+	private static Consumer<Integer> addOptionToResult(List<String> options, Set<String> result) {
+		return input -> result.add(options.get(input));
+	}
+
+
 	private void askQuestionByInput(String question) {
 		sounds.alert();
 		System.out.print("Input: ");
-		String answer = tryOrThrow(reader::readLine);
+		String answer = ofCallable(reader::readLine).get();
 		store(question, answer);
 	}
 
-	private void askQuestionByOption(String question, String[] options) {
+	private void askQuestionByOption(String question, List<String> options) {
 		StringJoiner joiner = new StringJoiner("\n");
 		int id = 0;
 		for (String option : options) {
@@ -99,8 +105,8 @@ public class QuestionAnswerService extends BasePage {
 		}
 		sounds.alert();
 		System.out.println(joiner);
-		int input = askRangeInteger(options.length - 1);
-		store(question, options[input]);
+		int input = askRangeInteger(options.size() - 1);
+		store(question, options.get(input));
 	}
 
 	private int askRangeInteger(int max) {

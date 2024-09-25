@@ -1,5 +1,6 @@
 package bot.linkedin;
 
+import io.vavr.control.Try;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,8 +16,10 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.function.Predicate;
 
-import static bot.utils.Utils.tryCatchGet;
+import static io.vavr.control.Try.ofCallable;
 
 @Setter
 @Getter
@@ -35,6 +38,10 @@ public class BasePage {
 		return driver.findElement(locator);
 	}
 
+	public Callable<List<WebElement>> findAll(By locator) {
+		return () -> driver.findElements(locator);
+	}
+
 	public List<WebElement> findAllWait(By locator) {
 		return wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(locator));
 	}
@@ -44,7 +51,7 @@ public class BasePage {
 	}
 
 	public Optional<WebElement> findOptional(By locator) {
-		return tryCatchGet(() -> find(locator));
+		return Optional.ofNullable(ofCallable(() -> find(locator)).getOrNull());
 	}
 
 	public Optional<WebElement> findClickableOptional(By location) {
@@ -59,11 +66,15 @@ public class BasePage {
 	}
 
 	public List<WebElement> findAllClickable(By locator) {
-		return tryCatchGet(() -> driver.findElements(locator))
+		return ofCallable(findAll(locator))
 				.map(list -> list.stream()
-						.filter(element -> element.isDisplayed() && element.isEnabled())
+						.filter(displayedAndEnabled())
 						.toList())
-				.orElse(Collections.emptyList());
+				.getOrElse(Collections.emptyList());
+	}
+
+	private static Predicate<WebElement> displayedAndEnabled() {
+		return element -> element.isDisplayed() && element.isEnabled();
 	}
 
 	@PostConstruct
@@ -86,6 +97,10 @@ public class BasePage {
 	public void clickWait(WebElement element) {
 		WebElement target = wait.until(ExpectedConditions.elementToBeClickable(element));
 		click(target);
+	}
+
+	public Try<Void> tryClick(By locator) {
+		return Try.run(() -> click(find(locator)));
 	}
 
 	public void click(By... locators) {

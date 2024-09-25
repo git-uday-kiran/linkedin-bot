@@ -2,6 +2,7 @@ package bot.linkedin;
 
 import bot.enums.EasyApplyOption;
 import bot.linkedin.filters.JobSearchFilter;
+import io.vavr.control.Try;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 import static bot.utils.ThroatUtils.*;
+import static io.vavr.control.Try.run;
 
 @Log4j2
 @Component
@@ -78,7 +80,7 @@ public class Tasks extends BasePage {
 		if (filter.getEasyApply() == EasyApplyOption.ENABLE) {
 			click(filter.getEasyApply().getLocation());
 		}
-		filter.getLocations().forEach(lc -> click(lc.getLocation()));
+		filter.getLocations().forEach(lc -> tryClick(lc.getLocation()));
 		if (filter.getUnder10Applicants() == Under10Applicants.ENABLE) {
 			click(filter.getUnder10Applicants().getLocation());
 		}

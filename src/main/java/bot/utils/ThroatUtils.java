@@ -1,6 +1,8 @@
 package bot.utils;
 
-import static bot.utils.Utils.sleep;
+import java.util.concurrent.TimeUnit;
+
+import static io.vavr.control.Try.run;
 
 public final class ThroatUtils {
 
@@ -24,6 +26,6 @@ public final class ThroatUtils {
 	}
 
 	public static void throat(int seconds) {
-		sleep(seconds);
+		run(() -> TimeUnit.SECONDS.sleep(seconds));
 	}
 }

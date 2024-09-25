@@ -5,6 +5,7 @@ import bot.linkedin.filters.JobSearchFilter;
 import bot.linkedin.models.CanApply;
 import bot.linkedin.models.JobsApplied;
 import bot.linkedin.services.*;
+import io.vavr.control.Try;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -23,7 +24,7 @@ import java.util.stream.IntStream;
 
 import static bot.linkedin.Locations.EASY_APPLY;
 import static bot.utils.ThroatUtils.*;
-import static bot.utils.Utils.*;
+import static io.vavr.control.Try.run;
 import static java.util.Objects.requireNonNull;
 
 @Log4j2
@@ -59,7 +60,7 @@ public class EasyJobApplier extends BasePage {
 		tasks.performSearchQuery(searchQuery);
 		tasks.applyFilter(filter);
 
-		tryCatch(this::startCheckingJobs);
+		run(this::startCheckingJobs).orElseRun(log::error);
 		sounds.finished();
 	}
 
@@ -69,7 +70,7 @@ public class EasyJobApplier extends BasePage {
 		tasks.goToHomePage();
 		tasks.clickJobs();
 		tasks.performSearchQuery(searchQuery);
-		tryCatch(this::startCheckingJobs);
+		run(this::startCheckingJobs).orElseRun(log::error);
 		sounds.finished();
 	}
 
@@ -83,11 +84,13 @@ public class EasyJobApplier extends BasePage {
 		IntStream.range(0, 10).forEach(e -> {
 			throatHigh();
 			scrollDown(1000);
-			findAllWait(showAllLocation).forEach(showAll -> {
-				tryIgnore(() -> processShowAll(showAll));
-			});
+			findAllWait(showAllLocation).forEach(this::tryProcessShowAll);
 		});
 		sounds.finished();
+	}
+
+	private void tryProcessShowAll(WebElement showAll) {
+		run(() -> processShowAll(showAll));
 	}
 
 	private void processShowAll(WebElement showAll) {
@@ -100,7 +103,7 @@ public class EasyJobApplier extends BasePage {
 		tabs.removeIf(currentTab::equals);
 		driver.switchTo().window(tabs.get(0));
 
-		tryCatch(this::startCheckingJobs);
+		run(this::startCheckingJobs).orElseRun(log::error);
 		driver.close();
 		driver.switchTo().window(currentTab);
 		sounds.finished();
@@ -168,7 +171,7 @@ public class EasyJobApplier extends BasePage {
 			}
 
 			scrollDown();
-			if (!goToPageIfExist(page + 1)) break;
+			if (tryGotToPage(page + 1).isFailure()) break;
 		}
 	}
 
@@ -176,7 +179,7 @@ public class EasyJobApplier extends BasePage {
 		return new HashSet<>(findAllWait(Locations.JOB_CARDS_LOCATION));
 	}
 
-	public boolean goToPageIfExist(int page) {
+	public Try<Integer> tryGotToPage(int page) {
 		try {
 			log.info("Going to next page: {}", page);
 			By locator = By.xpath("//button[@aria-label='Page " + page + "']");
@@ -184,10 +187,10 @@ public class EasyJobApplier extends BasePage {
 			click(locator);
 			throatMedium();
 			log.info("New page: {}", page);
-			return true;
+			return Try.success(page);
 		} catch (Exception exception) {
 			log.warn("Next page wasn't found: {}, Message: {}", page, exception.getLocalizedMessage());
-			return false;
+			return Try.failure(exception);
 		}
 	}
 

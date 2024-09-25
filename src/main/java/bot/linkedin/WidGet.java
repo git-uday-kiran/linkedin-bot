@@ -1,6 +1,7 @@
 package bot.linkedin;
 
 import bot.linkedin.services.QuestionAnswerService;
+import io.vavr.control.Try;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -9,14 +10,14 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.*;
-import java.util.function.BinaryOperator;
-import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static bot.linkedin.Locations.*;
-import static bot.utils.ThroatUtils.*;
-import static bot.utils.Utils.*;
+import static bot.utils.ThroatUtils.throatLow;
+import static bot.utils.ThroatUtils.throatMedium;
+import static io.vavr.control.Try.ofCallable;
+import static io.vavr.control.Try.run;
 import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.toMap;
 
@@ -51,11 +52,6 @@ public class WidGet extends BasePage {
 		});
 	}
 
-	private void checkLabel(String label) {
-		By locator = By.xpath("//label[text()='" + label + "']");
-		findOptional(locator).ifPresent(WebElement::click);
-	}
-
 	private void checkSelectionOptionQuestions() {
 		IntStream.range(0, 25).forEach(questionNo -> {
 			By questionLabel = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > div > label > span:first-child");
@@ -66,7 +62,7 @@ public class WidGet extends BasePage {
 						.stream()
 						.collect(toMap(WebElement::getText, identity(), (a, b) -> a));
 
-				String answer = questionAnswer.ask(question.getText(), options.keySet().toArray(new String[0]));
+				String answer = questionAnswer.ask(question.getText(), options.keySet().stream().toList());
 				question.click();
 				throatLow();
 
@@ -89,7 +85,10 @@ public class WidGet extends BasePage {
 
 	private Set<WebElement> findAllSelectOptions(Function<Integer, By> locationGiver) {
 		Set<WebElement> elements = new HashSet<>();
-		IntStream.range(0, 25).forEach(n -> tryCatchGet(() -> driver.findElements(locationGiver.apply(n))).ifPresent(elements::addAll));
+		IntStream.range(0, 25).forEach(n -> {
+			By location = locationGiver.apply(n);
+			ofCallable(findAll(location)).andThen(elements::addAll);
+		});
 		return elements;
 	}
 
@@ -98,7 +97,7 @@ public class WidGet extends BasePage {
 			By questionLabel = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + q + ") > .jobs-easy-apply-form-element > fieldset > legend > span > span:first-child");
 			findOptional(questionLabel).ifPresent(question -> {
 				Map<String, WebElement> buttons = findAllRadioButtons(q).stream().collect(toMap(WebElement::getText, identity()));
-				String answer = questionAnswer.ask(question.getText(), buttons.keySet().toArray(new String[0]));
+				String answer = questionAnswer.ask(question.getText(), buttons.keySet().stream().toList());
 				buttons.get(answer).click();
 			});
 		});
@@ -109,7 +108,7 @@ public class WidGet extends BasePage {
 			By questionLabel = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + q + ") > .jobs-easy-apply-form-element > fieldset > legend >div> span:first-child");
 			findOptional(questionLabel).ifPresent(question -> {
 				Map<String, WebElement> boxes = findAllCheckBoxes(q).stream().collect(toMap(WebElement::getText, identity()));
-				Set<String> answers = questionAnswer.askCheckBoxOptionsAndNoCache(question.getText(), boxes.keySet());
+				Set<String> answers = questionAnswer.askCheckBoxOptionsAndNoCache(question.getText(), boxes.keySet().stream().toList());
 				for (var entry : boxes.entrySet()) {
 					if (!answers.contains(entry.getKey())) continue;
 					WebElement element = entry.getValue();
@@ -128,7 +127,7 @@ public class WidGet extends BasePage {
 		Set<WebElement> elements = new HashSet<>();
 		IntStream.range(0, 25).forEach(n -> {
 			By location = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > fieldset > div:nth-of-type(" + n + ") > label");
-			tryCatchGet(() -> driver.findElements(location)).ifPresent(elements::addAll);
+			ofCallable(findAll(location)).andThen(elements::addAll);
 		});
 		return elements;
 	}
@@ -137,7 +136,7 @@ public class WidGet extends BasePage {
 		Set<WebElement> elements = new LinkedHashSet<>();
 		IntStream.range(0, 25).forEach(n -> {
 			By location = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > fieldset > div:nth-of-type(" + n + ") > label");
-			tryCatchGet(() -> driver.findElements(location)).ifPresent(elements::addAll);
+			ofCallable(findAll(location)).andThen(elements::addAll);
 		});
 		return elements;
 	}
@@ -146,7 +145,7 @@ public class WidGet extends BasePage {
 		IntStream.range(0, 25).forEach(q -> {
 			By titleLocation = By.cssSelector("form>div>div>span:nth-of-type(" + (q * 2 + 1) + ")");
 			By subTitleLocation = By.cssSelector("form>div>div>span:nth-of-type(" + (q * 2 + 2) + ")");
-			tryIgnore(() -> {
+			run(() -> {
 				int questionId = q + 1;
 				String title = find(titleLocation).getText();
 				String subTitle = find(subTitleLocation).getText();
@@ -162,7 +161,7 @@ public class WidGet extends BasePage {
 				Function<Integer, By> optionLocationGiver = optionId -> By.cssSelector("form >div>div>div:nth-of-type(" + questionId + ")>div>div>select>option:nth-of-type(" + optionId + ")");
 				findOptional(selectOptionLocation).ifPresent(select -> {
 					Map<String, WebElement> options = findAllSelectOptions(optionLocationGiver).stream().collect(toMap(WebElement::getText, identity()));
-					String answer = questionAnswer.ask(question, options.keySet());
+					String answer = questionAnswer.ask(question, options.keySet().stream().toList());
 					click(select);
 					click(options.get(answer));
 				});
@@ -171,17 +170,16 @@ public class WidGet extends BasePage {
 	}
 
 	public Optional<WidGet> nextWidget() {
-		BooleanSupplier submit = () -> tryIgnore(() -> click(SUBMIT_APPLICATION));
-		BooleanSupplier review = () -> tryIgnore(() -> click(REVIEW));
-		BooleanSupplier next = () -> tryIgnore(() -> click(NEXT));
-		BooleanSupplier continueApplying = () -> tryIgnore(() -> click(CONTINUE_APPLYING));
-		BooleanSupplier anyOne = () -> submit.getAsBoolean() || review.getAsBoolean() || next.getAsBoolean() || continueApplying.getAsBoolean();
+		Try<Void> tried = tryClick(SUBMIT_APPLICATION)
+				.orElse(tryClick(REVIEW))
+				.orElse(tryClick(NEXT))
+				.orElse(tryClick(CONTINUE_APPLYING));
 
-		if (anyOne.getAsBoolean()) {
+		if (tried.isSuccess()) {
 			throatMedium();
 			return Optional.of(new WidGet(driver, questionAnswer));
 		}
-		tryCatch(() -> find(CLOSE_WIDGET).click());
+		tryClick(CLOSE_WIDGET).orElseRun(log::error);
 		return Optional.empty();
 	}
 
