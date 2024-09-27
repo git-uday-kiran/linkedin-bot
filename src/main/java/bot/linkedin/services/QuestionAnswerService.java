@@ -62,8 +62,9 @@ public class QuestionAnswerService extends BasePage {
 		StringJoiner joiner = new StringJoiner("\n");
 		IntStream.range(0, options.size()).forEach(id -> joiner.add(id + ". " + options.get(id)));
 
+		sounds.alert();
+		System.out.println("Enter an empty line to stop taking inputs.");
 		System.out.println("Question: " + question);
-		System.out.println("Enter empty line stop taking inputs.");
 		System.out.println(joiner);
 
 		String line;

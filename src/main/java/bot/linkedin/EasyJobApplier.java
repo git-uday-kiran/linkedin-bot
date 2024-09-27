@@ -16,15 +16,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 import static bot.linkedin.Locations.EASY_APPLY;
 import static bot.utils.ThroatUtils.*;
+import static io.vavr.control.Try.ofCallable;
 import static io.vavr.control.Try.run;
 import static java.util.Objects.requireNonNull;
 
@@ -170,7 +168,10 @@ public class EasyJobApplier extends BasePage {
 
 			for (WebElement job : jobs) {
 				clickWait(job);
-				if (appliedRepo.existsByJobDesc(getJobDescription())) continue;
+				if (isApplied()) {
+					log.info("Applied already.");
+					continue;
+				}
 				jobConsumer.accept(job);
 				throatLow();
 			}
@@ -180,11 +181,17 @@ public class EasyJobApplier extends BasePage {
 		}
 	}
 
+	private boolean isApplied() {
+		By appliedLocation = By.xpath("//span[contains(., 'Applied')]");
+		List<WebElement> appliedElementsFound = ofCallable(findAll(appliedLocation)).getOrElse(Collections.emptyList());
+		return !appliedElementsFound.isEmpty();
+	}
+
 	private Set<WebElement> getNewJobs() {
 		return new HashSet<>(findAllWait(Locations.JOB_CARDS_LOCATION));
 	}
 
-	public Try<Integer> tryGotToPage(int page) {
+	private Try<Integer> tryGotToPage(int page) {
 		try {
 			log.info("Going to next page: {}", page);
 			By locator = By.xpath("//button[@aria-label='Page " + page + "']");
