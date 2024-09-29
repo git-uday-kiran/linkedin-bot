@@ -111,7 +111,8 @@ public class BasePage {
 
 	public void click(WebElement... elements) {
 		for (WebElement element : elements) {
-			Object clicked = element.getText().replace('\n', ' ');
+			String clicked = element.getText().replace('\n', ' ');
+			if(clicked.isEmpty()) clicked =  element.getAccessibleName();
 			scrollJS(element);
 			highlight(elements);
 			element.click();

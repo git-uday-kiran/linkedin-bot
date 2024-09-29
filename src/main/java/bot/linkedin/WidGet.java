@@ -96,7 +96,7 @@ public class WidGet extends BasePage {
 		IntStream.range(0, 25).forEach(q -> {
 			By questionLabel = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + q + ") > .jobs-easy-apply-form-element > fieldset > legend > span > span:first-child");
 			findOptional(questionLabel).ifPresent(question -> {
-				Map<String, WebElement> buttons = findAllRadioButtons(q).stream().collect(toMap(WebElement::getText, identity()));
+				Map<String, WebElement> buttons = getAllCheckBoxesAsMap(findAllRadioButtons(q));
 				String answer = questionAnswer.ask(question.getText(), buttons.keySet().stream().toList());
 				buttons.get(answer).click();
 			});
@@ -107,9 +107,9 @@ public class WidGet extends BasePage {
 		IntStream.range(0, 25).forEach(q -> {
 			By questionLabel = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + q + ") > .jobs-easy-apply-form-element > fieldset > legend >div> span:first-child");
 			findOptional(questionLabel).ifPresent(question -> {
-				Map<String, WebElement> boxes = findAllCheckBoxes(q).stream().collect(toMap(WebElement::getText, identity()));
-				Set<String> answers = questionAnswer.askCheckBoxOptionsAndNoCache(question.getText(), boxes.keySet().stream().toList());
-				for (var entry : boxes.entrySet()) {
+				List<String> checkBoxOptions = findAllCheckBoxes(q).stream().map(WebElement::getText).toList();
+				Set<String> answers = questionAnswer.askCheckBoxOptionsAndNoCache(question.getText(), checkBoxOptions);
+				for (var entry : getAllCheckBoxesAsMap(findAllCheckBoxes(q)).entrySet()) {
 					if (!answers.contains(entry.getKey())) continue;
 					WebElement element = entry.getValue();
 					Boolean isStale = ExpectedConditions.stalenessOf(element).apply(driver);
@@ -121,6 +121,10 @@ public class WidGet extends BasePage {
 				}
 			});
 		});
+	}
+
+	private Map<String, WebElement> getAllCheckBoxesAsMap(Set<WebElement> q) {
+		return q.stream().collect(toMap(WebElement::getText, identity()));
 	}
 
 	private Set<WebElement> findAllCheckBoxes(int questionNo) {
@@ -160,7 +164,7 @@ public class WidGet extends BasePage {
 				By selectOptionLocation = By.cssSelector("form >div>div>div:nth-of-type(" + questionId + ")>div>div>select");
 				Function<Integer, By> optionLocationGiver = optionId -> By.cssSelector("form >div>div>div:nth-of-type(" + questionId + ")>div>div>select>option:nth-of-type(" + optionId + ")");
 				findOptional(selectOptionLocation).ifPresent(select -> {
-					Map<String, WebElement> options = findAllSelectOptions(optionLocationGiver).stream().collect(toMap(WebElement::getText, identity()));
+					Map<String, WebElement> options = getAllCheckBoxesAsMap(findAllSelectOptions(optionLocationGiver));
 					String answer = questionAnswer.ask(question, options.keySet().stream().toList());
 					click(select);
 					click(options.get(answer));

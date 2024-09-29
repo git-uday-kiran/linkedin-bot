@@ -18,6 +18,7 @@ import org.springframework.util.Assert;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 import static bot.linkedin.Locations.EASY_APPLY;
@@ -25,6 +26,7 @@ import static bot.utils.ThroatUtils.*;
 import static io.vavr.control.Try.ofCallable;
 import static io.vavr.control.Try.run;
 import static java.util.Objects.requireNonNull;
+import static java.util.function.Predicate.not;
 
 @Log4j2
 @Service
@@ -69,6 +71,7 @@ public class EasyJobApplier extends BasePage {
 		tasks.goToHomePage();
 		tasks.clickJobs();
 		tasks.performSearchQuery(searchQuery);
+		throatMedium();
 		run(this::startCheckingJobs).orElseRun(log::error);
 		sounds.finished();
 	}
@@ -80,10 +83,14 @@ public class EasyJobApplier extends BasePage {
 		tasks.goToHomePage();
 		tasks.clickJobs();
 
+		Set<WebElement> processed = new HashSet<>();
 		IntStream.range(0, 10).forEach(e -> {
 			throatHigh();
 			scrollDown(1000);
-			findAllWait(showAllLocation).forEach(this::tryProcessShowAll);
+			findAllWait(showAllLocation).stream()
+					.filter(not(processed::contains))
+					.peek(processed::add)
+					.forEach(this::processShowAll);
 		});
 		sounds.finished();
 	}
@@ -124,19 +131,14 @@ public class EasyJobApplier extends BasePage {
 	private Runnable easyApplyNotFound(String jobTitle) {
 		return () -> {
 			log.warn("Easy Apply not found.");
-			if (isApplyLinkAvailable()) saveJobToDb(jobTitle);
+			saveJobToDb(jobTitle);
 		};
-	}
-
-	private boolean isApplyLinkAvailable() {
-		By locator = By.xpath("//span[text()='Apply']");
-		return !findAllClickable(locator).isEmpty();
 	}
 
 	private void saveJobToDb(String jobTitle) {
 		log.info("Saving this job and job url to database.");
 		String currentUrl = driver.getCurrentUrl();
-		canApplyRepo.save(new CanApply(jobTitle, currentUrl));
+		canApplyRepo.save(new CanApply(jobTitle, getJobDescription(), currentUrl));
 	}
 
 	private void processEasyApplyElement(WebElement easyApplyElement) {
