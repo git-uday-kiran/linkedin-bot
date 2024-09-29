@@ -43,7 +43,11 @@ public class BasePage {
 	}
 
 	public List<WebElement> findAllWait(By locator) {
-		return wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(locator));
+		return ofCallable(() -> wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(locator)))
+				.getOrElseGet(throwable -> {
+					log.error("Error while finding by waiting", throwable);
+					return Collections.emptyList();
+				});
 	}
 
 	public WebElement findWait(By locator) {
@@ -112,7 +116,7 @@ public class BasePage {
 	public void click(WebElement... elements) {
 		for (WebElement element : elements) {
 			String clicked = element.getText().replace('\n', ' ');
-			if(clicked.isEmpty()) clicked =  element.getAccessibleName();
+			if (clicked.isEmpty()) clicked = element.getAccessibleName();
 			scrollJS(element);
 			highlight(elements);
 			element.click();

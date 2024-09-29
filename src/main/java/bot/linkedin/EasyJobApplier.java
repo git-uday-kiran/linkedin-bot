@@ -18,7 +18,6 @@ import org.springframework.util.Assert;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 import static bot.linkedin.Locations.EASY_APPLY;
@@ -61,7 +60,7 @@ public class EasyJobApplier extends BasePage {
 		tasks.performSearchQuery(searchQuery);
 		tasks.applyFilter(filter);
 
-		run(this::startCheckingJobs).orElseRun(log::error);
+		run(this::startCheckingJobs).orElseRun(logError());
 		sounds.finished();
 	}
 
@@ -72,7 +71,10 @@ public class EasyJobApplier extends BasePage {
 		tasks.clickJobs();
 		tasks.performSearchQuery(searchQuery);
 		throatMedium();
-		run(this::startCheckingJobs).orElseRun(log::error);
+		tryClick(By.cssSelector("#search-reusables__filters-bar>ul>li:nth-child(7)>div>button"))
+				.andThen(ThroatUtils::throatMedium)
+				.orElseRun(logError("Tried finding and clicking Easy Apply button."));
+		run(this::startCheckingJobs).orElseRun(logError());
 		sounds.finished();
 	}
 
@@ -90,7 +92,7 @@ public class EasyJobApplier extends BasePage {
 			findAllWait(showAllLocation).stream()
 					.filter(not(processed::contains))
 					.peek(processed::add)
-					.forEach(this::processShowAll);
+					.forEach(this::tryProcessShowAll);
 		});
 		sounds.finished();
 	}
@@ -112,20 +114,30 @@ public class EasyJobApplier extends BasePage {
 		throatMedium();
 		tryClick(By.linkText("Easy Apply"))
 				.andThen(ThroatUtils::throatMedium)
-				.orElseRun(error -> log.warn("Tried finding Easy Apply button, but not found."));
-		run(this::startCheckingJobs).orElseRun(log::error);
+				.orElseRun(logError("Tried finding and clicking Easy Apply button."));
+		run(this::startCheckingJobs).orElseRun(logError());
 		driver.close();
 		driver.switchTo().window(currentTab);
 		sounds.finished();
 	}
 
 	private void startCheckingJobs() {
-		scanJobs(job -> {
-			String jobTitle = job.getText();
-			if (filterService.canProcess(jobTitle, getJobDescription())) {
-				findOptional(EASY_APPLY).ifPresentOrElse(this::processEasyApplyElement, easyApplyNotFound(jobTitle));
-			}
-		});
+		scanJobs(this::applyJob);
+	}
+
+	private void applyJob(WebElement job) {
+		String jobTitle = job.getText();
+		if (jobTitle.contains("Applied")) return;
+
+		clickWait(job);
+		if (isApplied()) {
+			log.info("Applied already.");
+			return;
+		}
+		throatLow();
+		if (filterService.canProcess(jobTitle, getJobDescription())) {
+			findOptional(EASY_APPLY).ifPresentOrElse(this::processEasyApplyElement, easyApplyNotFound(jobTitle));
+		}
 	}
 
 	private Runnable easyApplyNotFound(String jobTitle) {
@@ -169,13 +181,7 @@ public class EasyJobApplier extends BasePage {
 			log.info("Found {} jobs", jobs.size());
 
 			for (WebElement job : jobs) {
-				clickWait(job);
-				if (isApplied()) {
-					log.info("Applied already.");
-					continue;
-				}
 				jobConsumer.accept(job);
-				throatLow();
 			}
 
 			scrollDown();
@@ -211,6 +217,15 @@ public class EasyJobApplier extends BasePage {
 	private String getJobDescription() {
 		By jobDescLocation = By.cssSelector(".jobs-details");
 		return find(jobDescLocation).getText().replace('\n', '\t');
+	}
+
+
+	private Consumer<Throwable> logError(String message) {
+		return throwable -> log.error(message, throwable);
+	}
+
+	private Consumer<Throwable> logError() {
+		return logError("Something went wrong.");
 	}
 
 }

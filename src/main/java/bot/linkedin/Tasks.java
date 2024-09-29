@@ -56,7 +56,7 @@ public class Tasks extends BasePage {
 	public void performSearchQuery(String searchQuery) {
 		log.info("Performing search query: {}", searchQuery);
 		By searchLocator = By.xpath("/html/body/div[5]/header/div/div/div/div[2]/div[2]/div/div/input[1]");
-		clickJS(searchLocator);
+		clickWait(searchLocator);
 		set(searchLocator, searchQuery, Keys.ENTER);
 		throatMedium();
 	}

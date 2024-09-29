@@ -62,25 +62,30 @@ public class WidGet extends BasePage {
 						.stream()
 						.collect(toMap(WebElement::getText, identity(), (a, b) -> a));
 
-				String answer = questionAnswer.ask(question.getText(), options.keySet().stream().toList());
 				question.click();
 				throatLow();
 
 				if (question.getText().trim().equals("City")) {
-					fillCity(answer, questionNo);
+					String answer = questionAnswer.ask(question.getText(), options.keySet().stream().toList());
+					while (tryFillCity(answer, questionNo).isFailure()) {
+						answer = questionAnswer.ask(question.getText(), options.keySet().stream().toList());
+					}
 				} else {
+					String answer = questionAnswer.ask(question.getText(), options.keySet().stream().toList());
 					options.get(answer).click();
 				}
 			});
 		});
 	}
 
-	private void fillCity(String answer, int questionNo) {
-		By inputLocation = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > div > div > :is(input,textarea)");
-		By arrowDown = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > div > div > div:nth-of-type(2)");
-		find(inputLocation).sendKeys(answer, Keys.ENTER);
-		throatMedium();
-		find(arrowDown).sendKeys(Keys.ARROW_DOWN, Keys.ENTER);
+	private Try<Void> tryFillCity(String answer, int questionNo) {
+		return Try.run(() -> {
+			By inputLocation = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > div > div > :is(input,textarea)");
+			By arrowDown = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > div > div > div:nth-of-type(2)");
+			find(inputLocation).sendKeys(answer, Keys.ENTER);
+			throatMedium();
+			find(arrowDown).sendKeys(Keys.ARROW_DOWN, Keys.ENTER);
+		});
 	}
 
 	private Set<WebElement> findAllSelectOptions(Function<Integer, By> locationGiver) {

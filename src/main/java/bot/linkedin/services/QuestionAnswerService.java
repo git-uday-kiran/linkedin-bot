@@ -36,13 +36,10 @@ public class QuestionAnswerService extends BasePage {
 
 	public String ask(String question, List<String> options) {
 		System.out.println("Question: " + question);
-		var byQuestion = repo.findByQuestion(question);
-		if (byQuestion.isEmpty()) {
-			if (options.isEmpty()) {
-				askQuestionByInput(question);
-			} else {
-				askQuestionByOption(question, options);
-			}
+		if (options.isEmpty()) {
+			askQuestionByInput(question);
+		} else {
+			askQuestionByOption(question, options);
 		}
 		String answer = repo.findByQuestion(question).orElseThrow().getAnswer();
 		System.out.println("Answer: " + answer);
@@ -51,7 +48,8 @@ public class QuestionAnswerService extends BasePage {
 	}
 
 	public void store(String question, String answer) {
-		repo.save(new QuestionAnswer(question, answer));
+		if (repo.findByQuestion(question).isPresent()) repo.deleteByQuestion(question);
+		repo.saveAndFlush(new QuestionAnswer(question, answer));
 	}
 
 	public Set<String> askCheckBoxOptionsAndNoCache(String question, List<String> options) {
@@ -91,23 +89,28 @@ public class QuestionAnswerService extends BasePage {
 
 
 	private void askQuestionByInput(String question) {
-		sounds.alert();
-		System.out.print("Input: ");
-		String answer = ofCallable(reader::readLine).get();
-		store(question, answer);
+		if (repo.findByQuestion(question).isEmpty()) {
+			sounds.alert();
+			System.out.print("Input: ");
+			String answer = ofCallable(reader::readLine).get();
+			store(question, answer);
+		}
 	}
 
 	private void askQuestionByOption(String question, List<String> options) {
-		StringJoiner joiner = new StringJoiner("\n");
-		int id = 0;
-		for (String option : options) {
-			joiner.add(id + ". " + option);
-			id++;
+		Optional<QuestionAnswer> byQuestion = repo.findByQuestion(question);
+		if (byQuestion.isEmpty() || !options.contains(byQuestion.get().getAnswer())) {
+			StringJoiner joiner = new StringJoiner("\n");
+			int id = 0;
+			for (String option : options) {
+				joiner.add(id + ". " + option);
+				id++;
+			}
+			sounds.alert();
+			System.out.println(joiner);
+			int input = askRangeInteger(options.size() - 1);
+			store(question, options.get(input));
 		}
-		sounds.alert();
-		System.out.println(joiner);
-		int input = askRangeInteger(options.size() - 1);
-		store(question, options.get(input));
 	}
 
 	private int askRangeInteger(int max) {
