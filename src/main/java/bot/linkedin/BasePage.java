@@ -9,6 +9,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -17,9 +18,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.function.Predicate;
 
 import static io.vavr.control.Try.ofCallable;
+import static io.vavr.control.Try.run;
 
 @Setter
 @Getter
@@ -28,10 +29,12 @@ public class BasePage {
 
 	public final WebDriver driver;
 	private WebDriverWait wait;
+	public Actions actions;
 
 	public BasePage(WebDriver driver) {
 		this.driver = driver;
 		this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+		this.actions = new Actions(driver);
 	}
 
 	public WebElement find(By locator) {
@@ -58,27 +61,24 @@ public class BasePage {
 		return Optional.ofNullable(ofCallable(() -> find(locator)).getOrNull());
 	}
 
-	public Optional<WebElement> findClickableOptional(By location) {
-		Optional<WebElement> optional = findOptional(location);
-		if (optional.isPresent()) {
-			WebElement element = optional.get();
-			if (element.isDisplayed() && element.isEnabled()) {
-				return Optional.of(element);
-			}
-		}
-		return Optional.empty();
-	}
-
-	public List<WebElement> findAllClickable(By locator) {
+	public List<WebElement> findAllDisplayedAndEnabled(By locator) {
 		return ofCallable(findAll(locator))
 				.map(list -> list.stream()
-						.filter(displayedAndEnabled())
+						.filter(this::displayedAndEnabled)
 						.toList())
 				.getOrElse(Collections.emptyList());
 	}
 
-	private static Predicate<WebElement> displayedAndEnabled() {
-		return element -> element.isDisplayed() && element.isEnabled();
+	public boolean displayedAndEnabled(WebElement element) {
+		return element.isDisplayed() && element.isEnabled();
+	}
+
+	public void visibilityWait(By locator) {
+		wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+	}
+
+	public void clickableWait(WebElement element) {
+		wait.until(ExpectedConditions.elementToBeClickable(element));
 	}
 
 	@PostConstruct
@@ -107,6 +107,10 @@ public class BasePage {
 		return Try.run(() -> click(find(locator)));
 	}
 
+	public Try<Void> tryClick(WebElement element) {
+		return run(() -> click(element));
+	}
+
 	public void click(By... locators) {
 		for (By locator : locators) {
 			click(find(locator));
@@ -119,6 +123,7 @@ public class BasePage {
 			if (clicked.isEmpty()) clicked = element.getAccessibleName();
 			scrollJS(element);
 			highlight(elements);
+//			actions.scrollToElement(element).moveToElement(element).click(element).perform();
 			element.click();
 			log.info("Clicked: {}", clicked);
 		}

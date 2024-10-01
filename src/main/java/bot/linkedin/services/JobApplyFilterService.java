@@ -7,8 +7,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static java.util.Arrays.stream;
-
 @Log4j2
 @Service
 @RequiredArgsConstructor
@@ -17,19 +15,19 @@ public class JobApplyFilterService {
 	private final JobsApplyFilter applyFilter;
 
 	public boolean canProcess(String jobTitle, String jobDescription) {
-		String jobTitleOneLine = jobTitle.replace('\n', ' ').toLowerCase();
-		String jobDescriptionOneLine = jobDescription.replace('\n', ' ').toLowerCase();
-		return process(jobTitleOneLine, jobDescriptionOneLine);
+		String jobTitleLowerCase = jobTitle.toLowerCase();
+		String jobDescriptionLowerCase = jobDescription.toLowerCase();
+		return process(jobTitleLowerCase, jobDescriptionLowerCase);
 	}
 
 	private boolean process(String jobTitle, String jobDescription) {
-		log.info("Filtering => job title: {{}}, job desc: {{}}", jobTitle, jobDescription);
+		log.info("Filtering job: Job Title: {{}}, Job Desc: {{}}", jobTitle, jobDescription);
 		boolean canProcess = checkJobTitle(jobTitle) && checkJobDescription(jobDescription);
-		logProcess(canProcess, jobTitle, jobDescription);
+		logProcess(canProcess);
 		return canProcess;
 	}
 
-	private boolean checkJobTitle(String jobTitle) {
+	public boolean checkJobTitle(String jobTitle) {
 		List<String> includeWords = applyFilter.getJobTitle().getIncludeWords().stream()
 				.filter(jobTitle::contains).toList();
 		log.info("Job title include words found: {}", includeWords);
@@ -52,11 +50,11 @@ public class JobApplyFilterService {
 		return excludeWordsFound.isEmpty();
 	}
 
-	private void logProcess(boolean status, String jobTitle, String jobDescription) {
+	private void logProcess(boolean status) {
 		if (status) {
-			log.info("Job is suitable: job title: {{}}, job desc: {{}}", jobTitle, jobDescription);
+			log.info("Job is suitable");
 		} else {
-			log.warn("Job is not suitable: job title: {{}}, job desc: {{}}", jobTitle, jobDescription);
+			log.warn("Job is not suitable");
 		}
 	}
 

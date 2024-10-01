@@ -1,6 +1,7 @@
 package bot;
 
 import lombok.extern.log4j.Log4j2;
+import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
@@ -15,8 +16,9 @@ public class Beans {
 	@Bean
 	WebDriver webDriver() {
 		var profile = (new ProfilesIni()).getProfile("Default User");
-		var options = new FirefoxOptions();
-		options.setProfile(profile);
+		var options = new FirefoxOptions()
+				.setPageLoadStrategy(PageLoadStrategy.EAGER)
+				.setProfile(profile);
 		log.info("Loading driver...");
 		var firefoxDriver = new FirefoxDriver(options);
 		log.info("Driver loaded");

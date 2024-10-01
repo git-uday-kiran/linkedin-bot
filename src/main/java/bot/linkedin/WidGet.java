@@ -10,12 +10,12 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static bot.linkedin.Locations.*;
 import static bot.utils.ThroatUtils.throatLow;
-import static bot.utils.ThroatUtils.throatMedium;
 import static io.vavr.control.Try.ofCallable;
 import static io.vavr.control.Try.run;
 import static java.util.function.UnaryOperator.identity;
@@ -65,13 +65,14 @@ public class WidGet extends BasePage {
 				question.click();
 				throatLow();
 
-				if (question.getText().trim().equals("City")) {
-					String answer = questionAnswer.ask(question.getText(), options.keySet().stream().toList());
+				List<String> selectOptions = options.keySet().stream().toList();
+				if (question.getText().trim().startsWith("City")) {
+					String answer = questionAnswer.ask(question.getText(), selectOptions);
 					while (tryFillCity(answer, questionNo).isFailure()) {
-						answer = questionAnswer.ask(question.getText(), options.keySet().stream().toList());
+						answer = questionAnswer.ask(question.getText(), selectOptions);
 					}
 				} else {
-					String answer = questionAnswer.ask(question.getText(), options.keySet().stream().toList());
+					String answer = questionAnswer.ask(question.getText(), selectOptions);
 					options.get(answer).click();
 				}
 			});
@@ -82,8 +83,10 @@ public class WidGet extends BasePage {
 		return Try.run(() -> {
 			By inputLocation = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > div > div > :is(input,textarea)");
 			By arrowDown = By.cssSelector(".jobs-easy-apply-form-section__grouping:nth-of-type(" + questionNo + ") > .jobs-easy-apply-form-element > div > div > div:nth-of-type(2)");
-			find(inputLocation).sendKeys(answer, Keys.ENTER);
-			throatMedium();
+			WebElement element = find(inputLocation);
+			element.clear();
+			element.sendKeys(answer, Keys.ENTER);
+			throatLow();
 			find(arrowDown).sendKeys(Keys.ARROW_DOWN, Keys.ENTER);
 		});
 	}
@@ -129,7 +132,7 @@ public class WidGet extends BasePage {
 	}
 
 	private Map<String, WebElement> getAllCheckBoxesAsMap(Set<WebElement> q) {
-		return q.stream().collect(toMap(WebElement::getText, identity()));
+		return q.stream().collect(toMap(WebElement::getText, identity(), (a, b) -> a));
 	}
 
 	private Set<WebElement> findAllCheckBoxes(int questionNo) {
@@ -185,11 +188,15 @@ public class WidGet extends BasePage {
 				.orElse(tryClick(CONTINUE_APPLYING));
 
 		if (tried.isSuccess()) {
-			throatMedium();
+			throatLow();
 			return Optional.of(new WidGet(driver, questionAnswer));
 		}
-		tryClick(CLOSE_WIDGET).orElseRun(log::error);
+		throatLow();
+		run(() -> clickWait(CLOSE_WIDGET)).orElseRun(logError("Can't close widget"));
 		return Optional.empty();
 	}
 
+	private Consumer<Throwable> logError(String message) {
+		return throwable -> log.error(message, throwable);
+	}
 }

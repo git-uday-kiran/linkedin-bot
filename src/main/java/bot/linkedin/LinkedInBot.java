@@ -5,6 +5,7 @@ import bot.linkedin.filters.JobSearchFilter;
 import bot.linkedin.filters.JobsApplyFilter;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.Select;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -32,12 +33,13 @@ public class LinkedInBot extends BasePage implements ApplicationRunner {
 		if (searchFilter.getEasyApply() == EasyApplyOption.ENABLE) {
 			applier.apply(searchFilter);
 		}
-		if (applyFilter.isApplyWithoutSearchFilter()) {
-			applier.applyWithoutSearchFilter(searchFilter.getSearchQuery());
-		}
 		if (applyFilter.isScanJobsInHomePage()) {
 			applier.applyJobsInHomePage();
 		}
+		if (applyFilter.isApplyWithoutSearchFilter()) {
+			applier.applyWithoutSearchFilter(searchFilter.getSearchQuery());
+		}
+		Select select;
 	}
 
 }

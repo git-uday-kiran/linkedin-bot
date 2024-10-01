@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
-import static bot.linkedin.Locations.EASY_APPLY;
+import static bot.linkedin.Locations.*;
 import static bot.utils.ThroatUtils.*;
 import static io.vavr.control.Try.ofCallable;
 import static io.vavr.control.Try.run;
@@ -71,13 +71,10 @@ public class EasyJobApplier extends BasePage {
 		tasks.clickJobs();
 		tasks.performSearchQuery(searchQuery);
 		throatMedium();
-		tryClick(By.cssSelector("#search-reusables__filters-bar>ul>li:nth-child(7)>div>button"))
-				.andThen(ThroatUtils::throatMedium)
-				.orElseRun(logError("Tried finding and clicking Easy Apply button."));
+		tryClickEasyApplyFilter();
 		run(this::startCheckingJobs).orElseRun(logError());
 		sounds.finished();
 	}
-
 
 	public void applyJobsInHomePage() {
 		log.info("Applying jobs in home page");
@@ -112,9 +109,7 @@ public class EasyJobApplier extends BasePage {
 		driver.switchTo().window(tabs.get(0));
 
 		throatMedium();
-		tryClick(By.linkText("Easy Apply"))
-				.andThen(ThroatUtils::throatMedium)
-				.orElseRun(logError("Tried finding and clicking Easy Apply button."));
+		tryClickEasyApplyFilter();
 		run(this::startCheckingJobs).orElseRun(logError());
 		driver.close();
 		driver.switchTo().window(currentTab);
@@ -126,15 +121,14 @@ public class EasyJobApplier extends BasePage {
 	}
 
 	private void applyJob(WebElement job) {
-		String jobTitle = job.getText();
+		String jobTitle = job.getText().replace('\n', '\t');
 		if (jobTitle.contains("Applied")) return;
 
-		clickWait(job);
+		click(job);
 		if (isApplied()) {
 			log.info("Applied already.");
 			return;
 		}
-		throatLow();
 		if (filterService.canProcess(jobTitle, getJobDescription())) {
 			findOptional(EASY_APPLY).ifPresentOrElse(this::processEasyApplyElement, easyApplyNotFound(jobTitle));
 		}
@@ -164,7 +158,7 @@ public class EasyJobApplier extends BasePage {
 	private void applyEasyApplyJob(WebElement easyApplyElement) {
 		log.info("Applying job... ");
 		click(easyApplyElement);
-		throatMedium();
+		displayedAndEnabled(findWait(EASY_APPLY_MODEL));
 		Optional<WidGet> opWidGet = Optional.of(new WidGet(driver, questionAnswer));
 		while (opWidGet.isPresent()) {
 			WidGet widGet = opWidGet.get();
@@ -172,6 +166,7 @@ public class EasyJobApplier extends BasePage {
 			opWidGet = widGet.nextWidget();
 		}
 	}
+
 
 	private void scanJobs(Consumer<WebElement> jobConsumer) {
 		log.info("Clicking each job in jobs list...");
@@ -181,12 +176,21 @@ public class EasyJobApplier extends BasePage {
 			log.info("Found {} jobs", jobs.size());
 
 			for (WebElement job : jobs) {
+				actions.scrollToElement(job);
 				jobConsumer.accept(job);
 			}
 
 			scrollDown();
 			if (tryGotToPage(page + 1).isFailure()) break;
 		}
+	}
+
+	public void tryClickEasyApplyFilter() {
+		tryClick(By.cssSelector("#search-reusables__filters-bar>ul>li:nth-child(7)>div>button"))
+				.orElse(tryClick(By.cssSelector(".scaffold-layout-toolbar>div>section>div>div>div>ul>li:nth-child(8)>div>button")))
+				.orElse(tryClick(By.linkText("Easy Apply")))
+				.andThen(ThroatUtils::throatMedium)
+				.orElseRun(logError("Tried finding and clicking Easy Apply button."));
 	}
 
 	private boolean isApplied() {
@@ -215,8 +219,7 @@ public class EasyJobApplier extends BasePage {
 	}
 
 	private String getJobDescription() {
-		By jobDescLocation = By.cssSelector(".jobs-details");
-		return find(jobDescLocation).getText().replace('\n', '\t');
+		return findWait(JOB_DESCRIPTION).getText().replace('\n', '\t');
 	}
 
 

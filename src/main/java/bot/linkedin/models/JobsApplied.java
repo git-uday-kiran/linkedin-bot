@@ -15,7 +15,7 @@ public class JobsApplied {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	Long id;
 
-	@Column(nullable = false, unique = true, columnDefinition = "text(6000)")
+	@Column(nullable = false, unique = false, columnDefinition = "text(6000)")
 	String jobDesc;
 
 	public JobsApplied(String jobDesc) {
