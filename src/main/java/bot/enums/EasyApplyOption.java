@@ -6,8 +6,8 @@ import org.openqa.selenium.By;
 @Getter
 public enum EasyApplyOption {
 
-	ENABLE(By.xpath("/html/body/div[3]/div/div/div[2]/ul/li[8]/fieldset/div/div")),
-	DISABLE(By.xpath("/html/body/div[3]/div/div/div[2]/ul/li[8]/fieldset/div/div"));
+	ENABLE(By.xpath("//h3[text()='Easy Apply']/following-sibling::div/div")),
+	DISABLE(By.xpath("//h3[text()='Easy Apply']/following-sibling::div/div"));
 
 	final By location;
 

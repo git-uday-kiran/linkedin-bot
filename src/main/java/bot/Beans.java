@@ -17,7 +17,6 @@ public class Beans {
 	WebDriver webDriver() {
 		var profile = (new ProfilesIni()).getProfile("Default User");
 		var options = new FirefoxOptions()
-				.setPageLoadStrategy(PageLoadStrategy.EAGER)
 				.setProfile(profile);
 		log.info("Loading driver...");
 		var firefoxDriver = new FirefoxDriver(options);

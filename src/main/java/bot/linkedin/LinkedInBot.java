@@ -39,7 +39,6 @@ public class LinkedInBot extends BasePage implements ApplicationRunner {
 		if (applyFilter.isApplyWithoutSearchFilter()) {
 			applier.applyWithoutSearchFilter(searchFilter.getSearchQuery());
 		}
-		Select select;
 	}
 
 }

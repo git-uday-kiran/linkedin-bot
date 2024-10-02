@@ -1,8 +1,8 @@
 package bot.linkedin;
 
 import bot.enums.EasyApplyOption;
+import bot.enums.Under10Applicants;
 import bot.linkedin.filters.JobSearchFilter;
-import io.vavr.control.Try;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 import static bot.utils.ThroatUtils.*;
-import static io.vavr.control.Try.run;
 
 @Log4j2
 @Component
@@ -55,8 +54,9 @@ public class Tasks extends BasePage {
 
 	public void performSearchQuery(String searchQuery) {
 		log.info("Performing search query: {}", searchQuery);
-		By searchLocator = By.xpath("/html/body/div[5]/header/div/div/div/div[2]/div[2]/div/div/input[1]");
-		clickWait(searchLocator);
+		By searchLocator = By.xpath("//div[contains(@class,'jobs-search-box__input')][1]//input[1]");
+		throatMedium();
+		click(searchLocator);
 		set(searchLocator, searchQuery, Keys.ENTER);
 		throatMedium();
 	}
@@ -64,7 +64,7 @@ public class Tasks extends BasePage {
 	public void clickAdvancedFilters() {
 		throatMedium();
 		log.info("Clicking advanced filters option...");
-		var location = By.xpath("/html/body/div[5]/div[3]/div[4]/section/div/section/div/div/div/div/div/button[1]");
+		var location = By.xpath("//button[text()='All filters']");
 		find(location).click();
 		throatLow();
 	}
@@ -84,7 +84,7 @@ public class Tasks extends BasePage {
 		if (filter.getUnder10Applicants() == Under10Applicants.ENABLE) {
 			click(filter.getUnder10Applicants().getLocation());
 		}
-		By apply = By.xpath("/html/body/div[3]/div/div/div[3]/div/button[2]/span");
+		By apply = By.xpath("/html/body/div[4]/div/div/div[3]/div/button[2]/span");
 		throatMedium();
 		log.info("Applying filter...");
 		click(apply);

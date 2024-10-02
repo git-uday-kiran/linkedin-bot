@@ -39,7 +39,12 @@ public class EasyJobApplier extends BasePage {
 	private final CanApplyRepo canApplyRepo;
 	private final JobsDayCountRepo jobsDayCountRepo;
 
-	public EasyJobApplier(WebDriver driver, Tasks tasks, QuestionAnswerService questionAnswer, JobsAppliedRepo appliedRepo, Sounds sounds, JobApplyFilterService filterService, CanApplyRepo canApplyRepo, JobsDayCountRepo jobsDayCountRepo) {
+	private final SelectOptionsQuestions selectOptionsQuestions;
+	private final RadioOptionsQuestions radioOptionsQuestions;
+	private final InputQuestions inputQuestions;
+	private final CheckBoxQuestions checkBoxQuestions;
+
+	public EasyJobApplier(WebDriver driver, Tasks tasks, QuestionAnswerService questionAnswer, JobsAppliedRepo appliedRepo, Sounds sounds, JobApplyFilterService filterService, CanApplyRepo canApplyRepo, JobsDayCountRepo jobsDayCountRepo, SelectOptionsQuestions selectOptionsQuestions, RadioOptionsQuestions radioOptionsQuestions, InputQuestions inputQuestions, CheckBoxQuestions checkBoxQuestions) {
 		super(driver);
 		this.tasks = tasks;
 		this.questionAnswer = questionAnswer;
@@ -48,6 +53,10 @@ public class EasyJobApplier extends BasePage {
 		this.filterService = filterService;
 		this.canApplyRepo = canApplyRepo;
 		this.jobsDayCountRepo = jobsDayCountRepo;
+		this.selectOptionsQuestions = selectOptionsQuestions;
+		this.radioOptionsQuestions = radioOptionsQuestions;
+		this.inputQuestions = inputQuestions;
+		this.checkBoxQuestions = checkBoxQuestions;
 	}
 
 	public void apply(JobSearchFilter filter) {
@@ -124,7 +133,9 @@ public class EasyJobApplier extends BasePage {
 		String jobTitle = job.getText().replace('\n', '\t');
 		if (jobTitle.contains("Applied")) return;
 
-		click(job);
+		highlight(job);
+		actions.scrollToElement(job).click();
+
 		if (isApplied()) {
 			log.info("Applied already.");
 			return;
@@ -159,7 +170,7 @@ public class EasyJobApplier extends BasePage {
 		log.info("Applying job... ");
 		click(easyApplyElement);
 		displayedAndEnabled(findWait(EASY_APPLY_MODEL));
-		Optional<WidGet> opWidGet = Optional.of(new WidGet(driver, questionAnswer));
+		Optional<WidGet> opWidGet = Optional.of(new WidGet(driver, questionAnswer, radioOptionsQuestions, selectOptionsQuestions, inputQuestions, checkBoxQuestions));
 		while (opWidGet.isPresent()) {
 			WidGet widGet = opWidGet.get();
 			widGet.init();

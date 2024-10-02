@@ -1,7 +1,7 @@
 package bot.linkedin.filters;
 
 import bot.enums.*;
-import bot.linkedin.Under10Applicants;
+import bot.enums.Under10Applicants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,7 +32,6 @@ public class JobSearchFilter {
 	@Setter
 	private String searchQuery;
 
-
 	public enum Industry {
 		IT_SERVICES_AND_IT_CONSULTING, SOFTWARE_DEVELOPMENT, STAFFING_AND_RECRUITING, TECHNOLOGY_INFORMATION_AND_INTERNET,
 		FINANCIAL_SERVICE, TECHNOLOGY_INFORMATION_AND_MEDIA, HUMAN_RESOURCES_SERVICES, BUSINESS_CONSULTING_AND_SERVICES,
@@ -47,10 +46,6 @@ public class JobSearchFilter {
 	public enum Title {
 		SOFTWARE_ENGINEER, DEVOPS_ENGINEER, CLOUD_ENGINEER, FULL_STACK_ENGINEER, INFORMATION_TECHNOLOGY_ARCHITECT, APPLICATION_DEVELOPER,
 		PLATFORM_ENGINEER, SENIOR_SOFTWARE_ENGINEER, DATA_ENGINEER, JAVA_SOFTWARE_ENGINEER, SITE_RELIABILITY_ENGINEER;
-	}
-
-	public enum InYourNetwork {
-		ENABLE, DISABLE;
 	}
 
 	public enum Commitment {
