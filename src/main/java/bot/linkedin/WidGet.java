@@ -16,7 +16,7 @@ import static bot.linkedin.Locations.*;
 import static bot.utils.ThroatUtils.throatLow;
 
 @Log4j2
-public class WidGet extends BasePageV1 {
+public class WidGet extends BasePage {
 
 	private final QuestionAnswerService questionAnswer;
 	private final RadioOptionsQuestions radioOptionsQuestions;

@@ -1,6 +1,6 @@
 package bot.linkedin.question_solvers;
 
-import bot.linkedin.BasePageV1;
+import bot.linkedin.BasePage;
 import bot.linkedin.services.QuestionAnswerService;
 import io.vavr.control.Try;
 import lombok.extern.log4j.Log4j2;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 @Log4j2
 @Service
-public class InputQuestions extends BasePageV1 {
+public class InputQuestions extends BasePage {
 
 	private final QuestionAnswerService qaService;
 

@@ -1,7 +1,7 @@
 package bot.linkedin.question_solvers;
 
 
-import bot.linkedin.BasePageV1;
+import bot.linkedin.BasePage;
 import bot.linkedin.services.QuestionAnswerService;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
@@ -15,7 +15,7 @@ import java.util.List;
 
 @Log4j2
 @Service
-public class SelectOptionsQuestions extends BasePageV1 {
+public class SelectOptionsQuestions extends BasePage {
 
 	private final QuestionAnswerService qaService;
 

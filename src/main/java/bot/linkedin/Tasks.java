@@ -16,7 +16,7 @@ import static bot.utils.ThroatUtils.throatMedium;
 
 @Log4j2
 @Component
-public class Tasks extends BasePageV1 {
+public class Tasks extends BasePage {
 
 	private final String email = "udaykiran0486@gmail.com";
 	private final String password = "xxxxxx";
@@ -112,7 +112,7 @@ public class Tasks extends BasePageV1 {
 		WebElement applyFilter = waitForElementPresence(applyFilterLocation);
 		log.info("Applying filter...");
 		click(applyFilter);
-		throatLow();
+		throatMedium();
 	}
 
 }

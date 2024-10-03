@@ -1,9 +1,7 @@
 package bot.linkedin.services;
 
-import bot.linkedin.BasePage;
 import bot.linkedin.models.QuestionAnswer;
 import lombok.extern.log4j.Log4j2;
-import org.openqa.selenium.WebDriver;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -18,14 +16,13 @@ import static io.vavr.control.Try.ofCallable;
 
 @Log4j2
 @Service
-public class QuestionAnswerService extends BasePage {
+public class QuestionAnswerService {
 
 	private final Sounds sounds;
 	private final QuestionAnswerRepo repo;
 	private final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-	public QuestionAnswerService(WebDriver driver, Sounds sounds, QuestionAnswerRepo repo) {
-		super(driver);
+	public QuestionAnswerService(Sounds sounds, QuestionAnswerRepo repo) {
 		this.repo = repo;
 		this.sounds = sounds;
 	}

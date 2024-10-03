@@ -34,7 +34,7 @@ import static java.util.function.Predicate.not;
 
 @Log4j2
 @Service
-public class EasyJobApplier extends BasePageV1 {
+public class EasyJobApplier extends BasePage {
 
 	private final Tasks tasks;
 	private final QuestionAnswerService questionAnswer;
@@ -137,10 +137,10 @@ public class EasyJobApplier extends BasePageV1 {
 	private void applyJob(WebElement job) {
 		String jobTitle = job.getText().replace('\n', '\t');
 		if (jobTitle.contains("Applied")) return;
-		if (jobTitle.contains("Viewed")) return;
+//		if (jobTitle.contains("Viewed")) return;
 
 		click(job);
-		throatLow();
+//		throatLow();
 		if (filterService.canProcess(jobTitle, getJobDescription())) {
 			tryFindElement(EASY_APPLY).ifPresentOrElse(this::processEasyApplyElement, easyApplyNotFound(jobTitle));
 		}
