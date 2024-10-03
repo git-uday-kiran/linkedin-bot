@@ -1,6 +1,7 @@
-package bot.linkedin;
+package bot.linkedin.question_solvers;
 
 
+import bot.linkedin.BasePageV1;
 import bot.linkedin.services.QuestionAnswerService;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
@@ -30,7 +31,7 @@ public class SelectOptionsQuestions extends BasePageV1 {
 	public void scan() {
 		if (isPresentInDOM(questionGroupLocation)) {
 			findAll(questionGroupLocation).stream()
-					.map(this::moveMouseToElement)
+					.map(this::scrollIntoView)
 					.map(this::waitForClickable)
 					.forEach(this::solveQuestion);
 		}

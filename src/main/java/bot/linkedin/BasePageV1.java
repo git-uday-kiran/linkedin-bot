@@ -3,7 +3,9 @@ package bot.linkedin;
 
 import io.vavr.control.Try;
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
@@ -13,8 +15,12 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
+
+import static io.vavr.control.Try.run;
 
 @Getter
+@Log4j2
 public class BasePageV1 {
 
 	protected final WebDriver driver;
@@ -27,7 +33,7 @@ public class BasePageV1 {
 		this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 	}
 
-	public WebElement find(By locator) {
+	public WebElement findElement(By locator) {
 		return driver.findElement(locator);
 	}
 
@@ -46,6 +52,10 @@ public class BasePageV1 {
 
 	public List<WebElement> waitForPresence(By location) {
 		return wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(location));
+	}
+
+	public WebElement waitForElementPresence(By location) {
+		return wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(location)).getFirst();
 	}
 
 	public WebElement waitForClickable(WebElement element) {
@@ -67,24 +77,47 @@ public class BasePageV1 {
 	}
 
 	public WebElement scrollIntoView(WebElement element) {
-		actions.scrollToElement(element).perform();
+		((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
+		run(() -> waitForVisible(element));
 		return element;
 	}
-
-	public WebElement moveMouseToElement(WebElement element) {
-		actions.moveToElement(element).perform();
-		return element;
-	}
-
 
 	public Try<Void> tryClick(By locator) {
-		return Try.run(() -> click(find(locator)));
+		return run(() -> click(findElement(locator)));
 	}
 
-	public WebElement click(WebElement element) {
-		actions.click(element).perform();
-		return element;
+	public Try<Void> tryClick(WebElement element) {
+		return run(() -> click(element));
 	}
 
+	public void click(WebElement element) {
+		String clicked = element.getText().replace('\n', ' ');
+		if (clicked.isEmpty()) clicked = element.getAccessibleName();
+
+		scrollIntoView(element);
+		waitForClickable(element);
+		highlight(element);
+
+		element.click();
+		log.info("Clicked: {}", clicked);
+	}
+
+	public void highlight(WebElement... webElements) {
+		String script = "arguments[0].setAttribute('style', 'border: 2px solid yellow')";
+		JavascriptExecutor js = (JavascriptExecutor) driver;
+		for (WebElement webElement : webElements) {
+			js.executeScript(script, webElement);
+		}
+	}
+
+	public Optional<WebElement> tryFindElement(By location) {
+		List<WebElement> elements = driver.findElements(location);
+		return elements.isEmpty() ? Optional.empty() : Optional.of(elements.getFirst());
+	}
+
+	public void findAndClick(By location) {
+		WebElement element = driver.findElement(location);
+		click(element);
+	}
 
 }

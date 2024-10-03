@@ -4,9 +4,12 @@ import bot.enums.EasyApplyOption;
 import bot.linkedin.filters.JobSearchFilter;
 import bot.linkedin.models.CanApply;
 import bot.linkedin.models.JobsApplied;
+import bot.linkedin.question_solvers.CheckBoxQuestions;
+import bot.linkedin.question_solvers.InputQuestions;
+import bot.linkedin.question_solvers.RadioOptionsQuestions;
+import bot.linkedin.question_solvers.SelectOptionsQuestions;
 import bot.linkedin.services.*;
 import bot.utils.ThroatUtils;
-import io.vavr.control.Try;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -16,20 +19,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 import static bot.linkedin.Locations.*;
 import static bot.utils.ThroatUtils.*;
-import static io.vavr.control.Try.ofCallable;
 import static io.vavr.control.Try.run;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
 
 @Log4j2
 @Service
-public class EasyJobApplier extends BasePage {
+public class EasyJobApplier extends BasePageV1 {
 
 	private final Tasks tasks;
 	private final QuestionAnswerService questionAnswer;
@@ -91,31 +96,31 @@ public class EasyJobApplier extends BasePage {
 		tasks.goToHomePage();
 		tasks.clickJobs();
 
+		throatMedium();
 		Set<WebElement> processed = new HashSet<>();
 		IntStream.range(0, 10).forEach(e -> {
-			throatHigh();
-			scrollDown(1000);
-			findAllWait(showAllLocation).stream()
+			findAll(showAllLocation).stream()
 					.filter(not(processed::contains))
 					.peek(processed::add)
 					.forEach(this::tryProcessShowAll);
+			scrollPageVertically(1000);
 		});
 		sounds.finished();
 	}
 
 	private void tryProcessShowAll(WebElement showAll) {
-		run(() -> processShowAll(showAll));
+		run(() -> processShowAll(showAll)).orElseRun(logError());
 	}
 
 	private void processShowAll(WebElement showAll) {
-		showAll.sendKeys(Keys.CONTROL, Keys.RETURN);
 		highlight(showAll);
+		showAll.sendKeys(Keys.CONTROL, Keys.RETURN);
 		log.info("Clicked: {}", showAll.getText());
 
 		String currentTab = driver.getWindowHandle();
 		List<String> tabs = new java.util.ArrayList<>(driver.getWindowHandles());
 		tabs.removeIf(currentTab::equals);
-		driver.switchTo().window(tabs.get(0));
+		driver.switchTo().window(tabs.getFirst());
 
 		throatMedium();
 		tryClickEasyApplyFilter();
@@ -123,25 +128,21 @@ public class EasyJobApplier extends BasePage {
 		driver.close();
 		driver.switchTo().window(currentTab);
 		sounds.finished();
+
+		log.info("Processing show all completed.");
+		throatMedium();
 	}
 
-	private void startCheckingJobs() {
-		scanJobs(this::applyJob);
-	}
 
 	private void applyJob(WebElement job) {
 		String jobTitle = job.getText().replace('\n', '\t');
 		if (jobTitle.contains("Applied")) return;
+		if (jobTitle.contains("Viewed")) return;
 
-		highlight(job);
-		actions.scrollToElement(job).click();
-
-		if (isApplied()) {
-			log.info("Applied already.");
-			return;
-		}
+		click(job);
+		throatLow();
 		if (filterService.canProcess(jobTitle, getJobDescription())) {
-			findOptional(EASY_APPLY).ifPresentOrElse(this::processEasyApplyElement, easyApplyNotFound(jobTitle));
+			tryFindElement(EASY_APPLY).ifPresentOrElse(this::processEasyApplyElement, easyApplyNotFound(jobTitle));
 		}
 	}
 
@@ -169,7 +170,7 @@ public class EasyJobApplier extends BasePage {
 	private void applyEasyApplyJob(WebElement easyApplyElement) {
 		log.info("Applying job... ");
 		click(easyApplyElement);
-		displayedAndEnabled(findWait(EASY_APPLY_MODEL));
+		waitForElementPresence(EASY_APPLY_MODEL);
 		Optional<WidGet> opWidGet = Optional.of(new WidGet(driver, questionAnswer, radioOptionsQuestions, selectOptionsQuestions, inputQuestions, checkBoxQuestions));
 		while (opWidGet.isPresent()) {
 			WidGet widGet = opWidGet.get();
@@ -178,21 +179,18 @@ public class EasyJobApplier extends BasePage {
 		}
 	}
 
+	private void startCheckingJobs() {
+		scanJobs(this::applyJob);
+	}
 
 	private void scanJobs(Consumer<WebElement> jobConsumer) {
 		log.info("Clicking each job in jobs list...");
 
 		for (int page = 1; page <= 100; page++) {
-			Set<WebElement> jobs = getNewJobs();
+			List<WebElement> jobs = getNewJobs();
 			log.info("Found {} jobs", jobs.size());
-
-			for (WebElement job : jobs) {
-				actions.scrollToElement(job);
-				jobConsumer.accept(job);
-			}
-
-			scrollDown();
-			if (tryGotToPage(page + 1).isFailure()) break;
+			jobs.stream().peek(this::scrollIntoView).forEach(jobConsumer);
+			if (!tryGotToPage(page + 1)) break;
 		}
 	}
 
@@ -204,33 +202,28 @@ public class EasyJobApplier extends BasePage {
 				.orElseRun(logError("Tried finding and clicking Easy Apply button."));
 	}
 
-	private boolean isApplied() {
-		By appliedLocation = By.xpath("//span[contains(., 'Applied')]");
-		List<WebElement> appliedElementsFound = ofCallable(findAll(appliedLocation)).getOrElse(Collections.emptyList());
-		return !appliedElementsFound.isEmpty();
+	private List<WebElement> getNewJobs() {
+		return waitForPresence(JOB_CARDS_LOCATION);
 	}
 
-	private Set<WebElement> getNewJobs() {
-		return new HashSet<>(findAllWait(Locations.JOB_CARDS_LOCATION));
-	}
-
-	private Try<Integer> tryGotToPage(int page) {
-		try {
-			log.info("Going to next page: {}", page);
-			By locator = By.xpath("//button[@aria-label='Page " + page + "']");
-			scrollJS(locator);
-			click(locator);
-			throatMedium();
+	private boolean tryGotToPage(int page) {
+		log.info("Going to next page: {}", page);
+		By locator = By.xpath("//button[@aria-label='Page " + page + "']");
+		Optional<WebElement> opNextPage = tryFindElement(locator);
+		if (opNextPage.isPresent()) {
+			WebElement nextPage = opNextPage.get();
+			scrollIntoView(nextPage);
+			click(nextPage);
 			log.info("New page: {}", page);
-			return Try.success(page);
-		} catch (Exception exception) {
-			log.warn("Next page wasn't found: {}, Message: {}", page, exception.getLocalizedMessage());
-			return Try.failure(exception);
+			return true;
+		} else {
+			log.warn("Next page {} not found.", page);
+			return false;
 		}
 	}
 
 	private String getJobDescription() {
-		return findWait(JOB_DESCRIPTION).getText().replace('\n', '\t');
+		return waitForElementPresence(JOB_DESCRIPTION).getText().replace('\n', '\t');
 	}
 
 

@@ -1,5 +1,6 @@
-package bot.linkedin;
+package bot.linkedin.question_solvers;
 
+import bot.linkedin.BasePageV1;
 import bot.linkedin.services.QuestionAnswerService;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
@@ -21,8 +22,8 @@ public class CheckBoxQuestions extends BasePageV1 {
 
 	private final By questionGroupLocation = By.xpath("//div[contains(@class, 'jobs-easy-apply-form-section__grouping')][.//fieldset][.//input[@type='checkbox']]");
 	private final By directLabelLocation = By.xpath(".//legend/div[1]/span[1]");
-	private final By titleLocation = By.xpath("//preceding-sibling::span[contains(@class, 'jobs-easy-apply-form-section__group-title')]");
-	private final By subTitleLocation = By.xpath("//preceding-sibling::span[contains(@class, 'jobs-easy-apply-form-section__group-subtitle')]");
+	private final By titleLocation = By.xpath("preceding-sibling::span[contains(@class, 'jobs-easy-apply-form-section__group-title')][1]");
+	private final By subTitleLocation = By.xpath("preceding-sibling::span[contains(@class, 'jobs-easy-apply-form-section__group-subtitle')][1]");
 	private final By checkBoxLocation = By.xpath(".//div[@data-test-text-selectable-option]//label");
 
 	public CheckBoxQuestions(WebDriver driver, QuestionAnswerService qaService) {
@@ -57,13 +58,14 @@ public class CheckBoxQuestions extends BasePageV1 {
 	}
 
 	private void solveQuestionWithOnlyCheckBoxes(WebElement question, String label) {
-		var buttons = question.findElements(checkBoxLocation);
-		var buttonsMap = mapOf(buttons);
-		var options = buttonsMap.keySet().stream().toList();
+		var boxes = question.findElements(checkBoxLocation);
+		var boxesMap = mapOf(boxes);
+		var options = boxesMap.keySet().stream().toList();
 
-		var answer = qaService.ask(label, options);
-		var answerButton = buttonsMap.get(answer);
-		scrollIntoView(answerButton).click();
+		var boxesSelected = qaService.askCheckBoxOptionsAndNoCache(label, options);
+		boxesSelected.stream()
+				.map(boxesMap::get)
+				.forEach(this::click);
 	}
 
 	private Map<String, WebElement> mapOf(List<WebElement> questions) {

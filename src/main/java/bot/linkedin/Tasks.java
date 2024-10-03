@@ -1,7 +1,6 @@
 package bot.linkedin;
 
-import bot.enums.EasyApplyOption;
-import bot.enums.Under10Applicants;
+import bot.enums.*;
 import bot.linkedin.filters.JobSearchFilter;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
@@ -12,11 +11,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-import static bot.utils.ThroatUtils.*;
+import static bot.utils.ThroatUtils.throatLow;
+import static bot.utils.ThroatUtils.throatMedium;
 
 @Log4j2
 @Component
-public class Tasks extends BasePage {
+public class Tasks extends BasePageV1 {
 
 	private final String email = "udaykiran0486@gmail.com";
 	private final String password = "xxxxxx";
@@ -31,7 +31,7 @@ public class Tasks extends BasePage {
 
 	public void login() {
 		log.info("Signing in....");
-		Optional<WebElement> op = findOptional(By.linkText("Sign in"));
+		Optional<WebElement> op = tryFindElement(By.linkText("Sign in"));
 		if (op.isPresent()) {
 			WebElement username = driver.findElement(By.id("username"));
 			WebElement password = driver.findElement(By.id("password"));
@@ -48,46 +48,71 @@ public class Tasks extends BasePage {
 	public void clickJobs() {
 		log.info("Clicking jobs...");
 		By jobsLocator = By.linkText("Jobs");
-		click(jobsLocator);
-		throatLow();
+		WebElement jobsOption = waitForElementPresence(jobsLocator);
+		waitForClickable(jobsOption);
+		click(jobsOption);
 	}
 
 	public void performSearchQuery(String searchQuery) {
 		log.info("Performing search query: {}", searchQuery);
 		By searchLocator = By.xpath("//div[contains(@class,'jobs-search-box__input')][1]//input[1]");
-		throatMedium();
-		click(searchLocator);
-		set(searchLocator, searchQuery, Keys.ENTER);
-		throatMedium();
+		WebElement searchBox = waitForElementPresence(searchLocator);
+		waitForClickable(searchBox);
+		click(searchBox);
+		searchBox.sendKeys(searchQuery, Keys.ENTER);
 	}
 
 	public void clickAdvancedFilters() {
 		throatMedium();
 		log.info("Clicking advanced filters option...");
 		var location = By.xpath("//button[text()='All filters']");
-		find(location).click();
+		WebElement filtersOption = waitForElementPresence(location);
+		waitForClickable(filtersOption);
+		click(filtersOption);
 		throatLow();
 	}
 
 	public void applyFilter(JobSearchFilter filter) {
 		clickAdvancedFilters();
 		throatLow();
-		click(filter.getSortBy().getLocation());
-		click(filter.getDatePosted().getLocation());
-		filter.getExperienceLevels().forEach(exp -> click(exp.getLocation()));
-		filter.getJobTypes().forEach(jt -> click(jt.getLocation()));
-		filter.getRemotes().forEach(rt -> click(rt.getLocation()));
+
+		findAndClick(filter.getSortBy().getLocation());
+		findAndClick(filter.getDatePosted().getLocation());
+
+		filter.getExperienceLevels().stream()
+				.map(ExperienceLevel::getLocation)
+				.map(this::findElement)
+				.forEach(this::click);
+
+		filter.getJobTypes().stream()
+				.map(JobType::getLocation)
+				.map(this::findElement)
+				.forEach(this::click);
+
+		filter.getRemotes().stream()
+				.map(Remote::getLocation)
+				.map(this::findElement)
+				.forEach(this::click);
+
 		if (filter.getEasyApply() == EasyApplyOption.ENABLE) {
-			click(filter.getEasyApply().getLocation());
+			findAndClick(filter.getEasyApply().getLocation());
 		}
-		filter.getLocations().forEach(lc -> tryClick(lc.getLocation()));
+
+		filter.getLocations().stream()
+				.map(Location::getLocation)
+				.map(this::tryFindElement)
+				.flatMap(Optional::stream)
+				.forEach(this::click);
+
 		if (filter.getUnder10Applicants() == Under10Applicants.ENABLE) {
-			click(filter.getUnder10Applicants().getLocation());
+			findAndClick(filter.getUnder10Applicants().getLocation());
 		}
-		By apply = By.xpath("/html/body/div[4]/div/div/div[3]/div/button[2]/span");
-		throatMedium();
+
+		By applyFilterLocation = By.xpath("/html/body/div[4]/div/div/div[3]/div/button[2]/span");
+		WebElement applyFilter = waitForElementPresence(applyFilterLocation);
 		log.info("Applying filter...");
-		click(apply);
+		click(applyFilter);
 		throatLow();
 	}
+
 }

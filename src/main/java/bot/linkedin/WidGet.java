@@ -1,5 +1,9 @@
 package bot.linkedin;
 
+import bot.linkedin.question_solvers.CheckBoxQuestions;
+import bot.linkedin.question_solvers.InputQuestions;
+import bot.linkedin.question_solvers.RadioOptionsQuestions;
+import bot.linkedin.question_solvers.SelectOptionsQuestions;
 import bot.linkedin.services.QuestionAnswerService;
 import io.vavr.control.Try;
 import lombok.extern.log4j.Log4j2;
@@ -46,8 +50,9 @@ public class WidGet extends BasePageV1 {
 			throatLow();
 			return Optional.of(new WidGet(driver, questionAnswer, radioOptionsQuestions, selectOptionsQuestions, inputQuestions, checkBoxQuestions));
 		}
-		WebElement closeWidget = waitForPresence(CLOSE_WIDGET).getFirst();
-		waitForClickable(closeWidget).click();
+		throatLow();
+		WebElement closeWidget = waitForElementPresence(CLOSE_WIDGET);
+		click(closeWidget);
 		return Optional.empty();
 	}
 

@@ -1,5 +1,6 @@
-package bot.linkedin;
+package bot.linkedin.question_solvers;
 
+import bot.linkedin.BasePageV1;
 import bot.linkedin.services.QuestionAnswerService;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
@@ -21,8 +22,8 @@ public class RadioOptionsQuestions extends BasePageV1 {
 
 	private final By questionGroupLocation = By.xpath("//div[contains(@class, 'jobs-easy-apply-form-section__grouping')][.//fieldset][.//input[@type='radio']]");
 	private final By directLabelLocation = By.xpath(".//legend/span[1]/span[1]");
-	private final By titleLocation = By.xpath("//preceding-sibling::span[contains(@class, 'jobs-easy-apply-form-section__group-title')]");
-	private final By subTitleLocation = By.xpath("//preceding-sibling::span[contains(@class, 'jobs-easy-apply-form-section__group-subtitle')]");
+	private final By titleLocation = By.xpath("preceding-sibling::span[contains(@class, 'jobs-easy-apply-form-section__group-title')][1]");
+	private final By subTitleLocation = By.xpath("preceding-sibling::span[contains(@class, 'jobs-easy-apply-form-section__group-subtitle')][1]");
 	private final By radioButtonsLocation = By.xpath(".//div[@data-test-text-selectable-option]//label");
 
 	public RadioOptionsQuestions(WebDriver driver, QuestionAnswerService qaService) {
