@@ -65,7 +65,7 @@ public class CheckBoxQuestions extends BasePageV1 {
 		var boxesSelected = qaService.askCheckBoxOptionsAndNoCache(label, options);
 		boxesSelected.stream()
 				.map(boxesMap::get)
-				.forEach(this::click);
+				.forEach(WebElement::click);
 	}
 
 	private Map<String, WebElement> mapOf(List<WebElement> questions) {
