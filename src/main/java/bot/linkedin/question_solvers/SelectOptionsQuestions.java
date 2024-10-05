@@ -20,7 +20,9 @@ public class SelectOptionsQuestions extends BasePage {
 	private final QuestionAnswerService qaService;
 
 	private final By questionGroupLocation = By.xpath("//div[contains(@class,'jobs-easy-apply-form-section__grouping')][.//select]");
-	private final By labelLocation = By.xpath(".//label/span[1]");
+	private final By directLabelLocation = By.xpath(".//label/span[1]");
+	private final By titleLocation = By.xpath("preceding-sibling::span[contains(@class, 'jobs-easy-apply-form-section__group-title')][1]");
+	private final By subTitleLocation = By.xpath("preceding-sibling::span[contains(@class, 'jobs-easy-apply-form-section__group-subtitle')][1]");
 	private final By selectionLocation = By.xpath(".//select");
 
 	public SelectOptionsQuestions(WebDriver driver, QuestionAnswerService qaService) {
@@ -38,7 +40,25 @@ public class SelectOptionsQuestions extends BasePage {
 	}
 
 	private void solveQuestion(WebElement question) {
-		String label = question.findElement(labelLocation).getText();
+		if (isDirectQuestion(question)) solveDirectQuestion(question);
+		else solveTitleSubTitleQuestion(question);
+	}
+
+	private void solveTitleSubTitleQuestion(WebElement question) {
+		String title = question.findElement(titleLocation).getText();
+		String subTitle = question.findElement(subTitleLocation).getText();
+		String label = title + '\n' + subTitle;
+		solveQuestionWithOnlySelectOptions(question, label);
+	}
+
+	private void solveDirectQuestion(WebElement question) {
+		String label = question.findElement(directLabelLocation).getText();
+		solveQuestionWithOnlySelectOptions(question, label);
+	}
+
+
+	private void solveQuestionWithOnlySelectOptions(WebElement question, String label) {
+//		String label = question.findElement(directLabelLocation).getText();
 		Select select = new Select(question.findElement(selectionLocation));
 
 		List<String> options = select.getOptions().stream()
@@ -46,6 +66,10 @@ public class SelectOptionsQuestions extends BasePage {
 				.toList();
 		String answer = qaService.ask(label, options);
 		select.selectByValue(answer);
+	}
+
+	private boolean isDirectQuestion(WebElement question) {
+		return !question.findElements(directLabelLocation).isEmpty();
 	}
 
 }

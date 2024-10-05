@@ -4,10 +4,7 @@ package bot.linkedin;
 import io.vavr.control.Try;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.interactions.WheelInput;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -52,6 +49,16 @@ public class BasePage {
 
 	public List<WebElement> waitForPresence(By location) {
 		return wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(location));
+	}
+
+	public Optional<WebElement> waitForElementPresence(By location, int waitSeconds) {
+		try {
+			WebDriverWait customWait = new WebDriverWait(driver, Duration.ofSeconds(waitSeconds));
+			WebElement element = customWait.until(ExpectedConditions.presenceOfElementLocated(location));
+			return Optional.ofNullable(element);
+		} catch (TimeoutException _) {
+		}
+		return Optional.empty();
 	}
 
 	public WebElement waitForElementPresence(By location) {

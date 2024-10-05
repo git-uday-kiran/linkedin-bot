@@ -89,8 +89,8 @@ public class Tasks extends BasePage {
 				.map(this::findElement)
 				.forEach(this::click);
 
-		filter.getRemotes().stream()
-				.map(Remote::getLocation)
+		filter.getWorkTypes().stream()
+				.map(WorkType::getLocation)
 				.map(this::findElement)
 				.forEach(this::click);
 

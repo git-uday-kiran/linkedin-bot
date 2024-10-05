@@ -1,5 +1,6 @@
 package bot.linkedin.services;
 
+import bot.linkedin.JobCard;
 import bot.linkedin.filters.JobsApplyFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -14,15 +15,9 @@ public class JobApplyFilterService {
 
 	private final JobsApplyFilter applyFilter;
 
-	public boolean canProcess(String jobTitle, String jobDescription) {
-		String jobTitleLowerCase = jobTitle.toLowerCase();
-		String jobDescriptionLowerCase = jobDescription.toLowerCase();
-		return process(jobTitleLowerCase, jobDescriptionLowerCase);
-	}
-
-	private boolean process(String jobTitle, String jobDescription) {
-		log.info("Filtering job: Job Title: {{}}, Job Desc: {{}}", jobTitle, jobDescription);
-		boolean canProcess = checkJobTitle(jobTitle) && checkJobDescription(jobDescription);
+	public boolean canProcess(JobCard job) {
+		log.info("Filtering job: {}", job);
+		boolean canProcess = checkJobTitle(job.getTitle()) && checkJobDescription(job.getDescription());
 		logProcess(canProcess);
 		return canProcess;
 	}

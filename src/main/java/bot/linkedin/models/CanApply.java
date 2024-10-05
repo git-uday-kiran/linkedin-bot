@@ -21,7 +21,6 @@ public class CanApply {
 	@Column(nullable = false, columnDefinition = "text(3000)")
 	String jobTitle;
 
-
 	@Column(nullable = false, columnDefinition = "text(6000)")
 	String jobDescription;
 

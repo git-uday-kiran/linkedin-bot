@@ -1,34 +1,35 @@
 package bot.linkedin.filters;
 
 import bot.enums.*;
-import bot.enums.Under10Applicants;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@AllArgsConstructor
+@Setter
+@NoArgsConstructor
 @ConfigurationProperties(prefix = "job.search.filter")
 public class JobSearchFilter {
 
-	private final SortBy sortBy;
-	private final DatePosted datePosted;
-	private final List<ExperienceLevel> experienceLevels;
-	private final List<String> companies;
-	private final List<JobType> jobTypes;
+	private SortBy sortBy;
+	private DatePosted datePosted;
+	private List<ExperienceLevel> experienceLevels = new ArrayList<>();
+	private List<String> companies = new ArrayList<>();
+	private List<JobType> jobTypes = new ArrayList<>();
 
-	private final List<Remote> remotes;
-	private final EasyApplyOption easyApply;
-	private final List<Location> locations;
-	private final List<Industry> industries;
-	private final List<JobFunction> jobFunctions;
-	private final List<Title> titles;
-	private final Under10Applicants under10Applicants;
-	private final InYourNetwork inYourNetwork;
-	private final List<Commitment> commitments;
+	private List<WorkType> workTypes = new ArrayList<>();
+	private EasyApplyOption easyApply;
+	private List<Location> locations = new ArrayList<>();
+	private List<Industry> industries = new ArrayList<>();
+	private List<JobFunction> jobFunctions = new ArrayList<>();
+	private List<Title> titles = new ArrayList<>();
+	private Under10Applicants under10Applicants;
+	private InYourNetwork inYourNetwork;
+	private List<Commitment> commitments = new ArrayList<>();
 	@Setter
 	private String searchQuery;
 

@@ -13,5 +13,7 @@ public interface Locations {
 	By JOB_CARDS_LOCATION = By.cssSelector("[data-view-name=\"job-card\"]");
 	By EASY_APPLY_MODEL = By.xpath("//div[@role='dialog']");
 	By JOB_DESCRIPTION = By.id("job-details");
+	By SHOW_ALL_LOCATION = By.cssSelector(".discovery-templates-vertical-list__footer > a");
+	By CLOSE_BUTTON = By.xpath("//span[text()='Done']");
 
 }

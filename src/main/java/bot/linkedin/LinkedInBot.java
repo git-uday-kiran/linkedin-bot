@@ -1,8 +1,8 @@
 package bot.linkedin;
 
 import bot.enums.EasyApplyOption;
+import bot.linkedin.filters.JobApplyConfig;
 import bot.linkedin.filters.JobSearchFilter;
-import bot.linkedin.filters.JobsApplyFilter;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.WebDriver;
 import org.springframework.boot.ApplicationArguments;
@@ -14,27 +14,32 @@ import org.springframework.stereotype.Component;
 public class LinkedInBot extends BasePage implements ApplicationRunner {
 
 	private final EasyJobApplier applier;
-	private final JobsApplyFilter applyFilter;
 	private final JobSearchFilter searchFilter;
+	private final JobApplyConfig applyConfig;
 
-	public LinkedInBot(WebDriver driver, EasyJobApplier applier, JobsApplyFilter applyFilter, JobSearchFilter searchFilter) {
+	public LinkedInBot(WebDriver driver, EasyJobApplier applier, JobSearchFilter searchFilter, JobApplyConfig applyConfig) {
 		super(driver);
 		this.applier = applier;
-		this.applyFilter = applyFilter;
 		this.searchFilter = searchFilter;
+		this.applyConfig = applyConfig;
 	}
 
 	@Override
 	public void run(ApplicationArguments args) {
+		applier.gotToUrlsAndStartScanningJobs(applyConfig.getManualJobsUrls());
+
 		if (searchFilter.getEasyApply() == EasyApplyOption.ENABLE) {
 			applier.apply(searchFilter);
 		}
-		if (applyFilter.isApplyWithoutSearchFilter()) {
+		if (applyConfig.isApplyWithoutSearchFilter()) {
 			applier.applyWithoutSearchFilter(searchFilter.getSearchQuery());
 		}
-		if (applyFilter.isScanJobsInHomePage()) {
+		if (applyConfig.isScanJobsInHomePage()) {
 			applier.applyJobsInHomePage();
 		}
+
+		log.info("Re-running the application");
+		run(args);
 	}
 
 }

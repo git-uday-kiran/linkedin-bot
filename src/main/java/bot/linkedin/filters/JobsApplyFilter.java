@@ -12,15 +12,6 @@ public class JobsApplyFilter {
 	private JobTitleFilter jobTitle;
 	private JobDescFilter jobDesc;
 
-	/**
-	 * Applies jobs by clicking jobs, performing search query, applying advanced filters and starts applying jobs
-	 */
-	private boolean scanJobsInHomePage = false;
-
-	/**
-	 * Applies jobs by clicking jobs, performing search query, starts applying without applying advanced filters
-	 */
-	private boolean applyWithoutSearchFilter = false;
 
 	@Data
 	public static class JobDescFilter {

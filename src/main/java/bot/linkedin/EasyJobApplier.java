@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 import java.util.stream.IntStream;
 
 import static bot.linkedin.Locations.*;
@@ -92,20 +93,33 @@ public class EasyJobApplier extends BasePage {
 
 	public void applyJobsInHomePage() {
 		log.info("Applying jobs in home page");
-		By showAllLocation = By.cssSelector(".discovery-templates-vertical-list__footer > a");
 		tasks.goToHomePage();
 		tasks.clickJobs();
 
 		throatMedium();
 		Set<WebElement> processed = new HashSet<>();
-		IntStream.range(0, 10).forEach(e -> {
-			findAll(showAllLocation).stream()
+		IntStream.range(0, 10).forEach(checkAndProcessShowAllLocations(processed));
+		sounds.finished();
+	}
+
+	public void gotToUrlsAndStartScanningJobs(List<String> links) {
+		for (String link : links) {
+			driver.get(link);
+			throatMedium();
+//			run(this::startCheckingJobs).orElseRun(logError());
+			processEasyApplyElementIfExist(new JobCard(this));
+			sounds.finished();
+		}
+	}
+
+	private IntConsumer checkAndProcessShowAllLocations(Set<WebElement> processed) {
+		return _ -> {
+			findAll(SHOW_ALL_LOCATION).stream()
 					.filter(not(processed::contains))
 					.peek(processed::add)
 					.forEach(this::tryProcessShowAll);
 			scrollPageVertically(1000);
-		});
-		sounds.finished();
+		};
 	}
 
 	private void tryProcessShowAll(WebElement showAll) {
@@ -134,37 +148,33 @@ public class EasyJobApplier extends BasePage {
 	}
 
 
-	private void applyJob(WebElement job) {
-		String jobTitle = job.getText().replace('\n', '\t');
-		if (jobTitle.contains("Applied")) return;
-//		if (jobTitle.contains("Viewed")) return;
+	private void applyJob(JobCard job) {
+		if (job.isApplied()) return;
+//		if (job.isViewed()) return;
 
-		click(job);
-//		throatLow();
-		if (filterService.canProcess(jobTitle, getJobDescription())) {
-			tryFindElement(EASY_APPLY).ifPresentOrElse(this::processEasyApplyElement, easyApplyNotFound(jobTitle));
+		job.click();
+		if (filterService.canProcess(job)) {
+			processEasyApplyElementIfExist(job);
 		}
 	}
 
-	private Runnable easyApplyNotFound(String jobTitle) {
-		return () -> {
+	private void processEasyApplyElementIfExist(JobCard job) {
+		var easyApply = waitForElementPresence(EASY_APPLY, 2);
+		if (easyApply.isPresent()) {
+			applyEasyApplyJob(easyApply.get());
+			sounds.appliedJob();
+			appliedRepo.save(new JobsApplied(job.getDescription()));
+			jobsDayCountRepo.incrementCountSafely(LocalDate.now());
+		} else {
 			log.warn("Easy Apply not found.");
-			saveJobToDb(jobTitle);
-		};
+			saveJobToDb(job);
+		}
 	}
 
-	private void saveJobToDb(String jobTitle) {
+	private void saveJobToDb(JobCard job) {
 		log.info("Saving this job and job url to database.");
 		String currentUrl = driver.getCurrentUrl();
-		canApplyRepo.save(new CanApply(jobTitle, getJobDescription(), currentUrl));
-	}
-
-	private void processEasyApplyElement(WebElement easyApplyElement) {
-		String jobDesc = getJobDescription();
-		applyEasyApplyJob(easyApplyElement);
-		sounds.appliedJob();
-		appliedRepo.save(new JobsApplied(jobDesc));
-		jobsDayCountRepo.incrementCountSafely(LocalDate.now());
+		canApplyRepo.save(new CanApply(job.getTitle(), job.getDescription(), currentUrl));
 	}
 
 	private void applyEasyApplyJob(WebElement easyApplyElement) {
@@ -183,13 +193,16 @@ public class EasyJobApplier extends BasePage {
 		scanJobs(this::applyJob);
 	}
 
-	private void scanJobs(Consumer<WebElement> jobConsumer) {
+	private void scanJobs(Consumer<JobCard> jobConsumer) {
 		log.info("Clicking each job in jobs list...");
 
 		for (int page = 1; page <= 100; page++) {
 			List<WebElement> jobs = getNewJobs();
 			log.info("Found {} jobs", jobs.size());
-			jobs.stream().peek(this::scrollIntoView).forEach(jobConsumer);
+			jobs.stream()
+					.peek(this::scrollIntoView)
+					.map(element -> new JobCard(element, this))
+					.forEach(jobConsumer);
 			if (!tryGotToPage(page + 1)) break;
 		}
 	}
@@ -222,17 +235,12 @@ public class EasyJobApplier extends BasePage {
 		}
 	}
 
-	private String getJobDescription() {
-		return waitForElementPresence(JOB_DESCRIPTION).getText().replace('\n', '\t');
-	}
-
-
 	private Consumer<Throwable> logError(String message) {
 		return throwable -> log.error(message, throwable);
 	}
 
 	private Consumer<Throwable> logError() {
-		return logError("Something went wrong.");
+		return logError("Something went wrong, current url: " + driver.getCurrentUrl());
 	}
 
 }

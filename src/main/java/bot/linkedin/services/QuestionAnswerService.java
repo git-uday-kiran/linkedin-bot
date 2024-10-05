@@ -127,7 +127,7 @@ public class QuestionAnswerService {
 		while (result == Integer.MIN_VALUE) {
 			try {
 				System.out.print("Input: ");
-				result = Integer.parseInt(reader.readLine());
+				result = Integer.parseInt(reader.readLine().trim());
 			} catch (NumberFormatException ignored) {
 				System.out.println("Please enter number format input.");
 			} catch (IOException e) {

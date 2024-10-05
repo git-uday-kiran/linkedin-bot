@@ -51,9 +51,19 @@ public class WidGet extends BasePage {
 			return Optional.of(new WidGet(driver, questionAnswer, radioOptionsQuestions, selectOptionsQuestions, inputQuestions, checkBoxQuestions));
 		}
 		throatLow();
-		WebElement closeWidget = waitForElementPresence(CLOSE_WIDGET);
-		click(closeWidget);
+		while (true) {
+			boolean failure = tryClickDismiss().orElse(tryClickDone()).isFailure();
+			if (!failure) break;
+		}
 		return Optional.empty();
+	}
+
+	private Try<Void> tryClickDismiss() {
+		return Try.run(() -> click(waitForElementPresence(CLOSE_WIDGET)));
+	}
+
+	private Try<Void> tryClickDone() {
+		return Try.run(() -> click(waitForElementPresence(CLOSE_BUTTON)));
 	}
 
 }
