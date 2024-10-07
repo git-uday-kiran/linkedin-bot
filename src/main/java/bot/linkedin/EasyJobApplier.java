@@ -150,7 +150,7 @@ public class EasyJobApplier extends BasePage {
 
 	private void applyJob(JobCard job) {
 		if (job.isApplied()) return;
-//		if (job.isViewed()) return;
+		if (job.isViewed()) return;
 
 		job.click();
 		if (filterService.canProcess(job)) {

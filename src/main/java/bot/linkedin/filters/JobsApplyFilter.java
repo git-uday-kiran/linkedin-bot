@@ -17,12 +17,14 @@ public class JobsApplyFilter {
 	public static class JobDescFilter {
 		private Set<String> excludeWords;
 		private Set<String> includeWords;
+		private Set<String> mandatoryWords;
 	}
 
 	@Data
 	public static class JobTitleFilter {
 		private Set<String> includeWords;
 		private Set<String> excludeWords;
+		private Set<String> mandatoryWords;
 	}
 
 }

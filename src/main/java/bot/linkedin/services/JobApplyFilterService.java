@@ -35,14 +35,25 @@ public class JobApplyFilterService {
 	}
 
 	private boolean checkJobDescription(String jobDescription) {
-		return excludeWordsNotFound(jobDescription);
+		return jobDescMandatoryWordsExist(jobDescription) && jobDescExcludeWordsNotFound(jobDescription);
 	}
 
-	private boolean excludeWordsNotFound(String jobDescription) {
-		var excludeWordsFound = applyFilter.getJobDesc().getExcludeWords().stream()
+	private boolean jobDescExcludeWordsNotFound(String jobDescription) {
+		var excludeWordsFound = applyFilter.getJobDesc()
+				.getExcludeWords()
+				.stream()
 				.filter(jobDescription::contains).toList();
 		log.info("Job description exclude words found: {} ", excludeWordsFound);
 		return excludeWordsFound.isEmpty();
+	}
+
+	private boolean jobDescMandatoryWordsExist(String jobDescription) {
+		boolean allExist = applyFilter.getJobDesc()
+				.getMandatoryWords()
+				.stream()
+				.allMatch(jobDescription::contains);
+		log.info("All job description mandatory words found: {}", allExist);
+		return allExist;
 	}
 
 	private void logProcess(boolean status) {

@@ -1,7 +1,6 @@
 package bot.linkedin;
 
 import bot.enums.WorkType;
-import bot.utils.ThroatUtils;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.WebElement;
@@ -65,7 +64,10 @@ public class JobCard {
 	}
 
 	private void findAndStoreDescription() {
-		description = basePage.waitForElementPresence(JOB_DESCRIPTION).getText().replace('\n', '\t');
+		description = basePage.waitForElementPresence(JOB_DESCRIPTION)
+				.getText()
+				.replace('\n', '\t')
+				.toLowerCase();
 	}
 
 	@Override
