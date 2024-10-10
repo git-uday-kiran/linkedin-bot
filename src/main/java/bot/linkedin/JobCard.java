@@ -14,6 +14,7 @@ import static bot.utils.ThroatUtils.throatLow;
 @Setter
 public class JobCard {
 
+	private String url;
 	private String title;
 	private String description;
 	private String location;
@@ -64,6 +65,7 @@ public class JobCard {
 		if (description == null) {
 			throatLow();
 			findAndStoreDescription();
+			this.url = basePage.driver.getCurrentUrl();
 		}
 	}
 
@@ -83,6 +85,7 @@ public class JobCard {
 				", location='" + location + '\'' +
 				", company='" + company + '\'' +
 				", description='" + description + '\'' +
+				", url='" + url + '\'' +
 				'}';
 	}
 }

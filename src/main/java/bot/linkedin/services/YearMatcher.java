@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class YearMatcher {
 
-	private final String regex = ".{0,50}((\\d{1,3} ?- ?\\d{1,3})|(\\d{1,3})\\+?) *(yrs|years?||YOE)[^#]{0,50}";
+	private final String regex = ".{0,50}((\\d{1,3} ?- ?\\d{1,3})|(\\d{1,3})\\+?) *(yrs|years?|YOE).{0,50}";
 
 	private final JobApplyConfig applyConfig;
 	private final QuestionAnswerService qaService;
@@ -51,9 +51,11 @@ public class YearMatcher {
 		String single = matcher1.group(3); // 1, 2
 		if (single != null) {
 			yearString = single;
+			log.info("Exp years: {}", single);
 		} else {
 			String range = matcher1.group(2); // 1-2, 1 - 2
-			yearString = range.split("-")[1].trim();
+			log.info("Exp years range: {}", range);
+			yearString = range.split("-")[0].trim();
 		}
 		return Integer.parseInt(yearString.trim());
 	}
