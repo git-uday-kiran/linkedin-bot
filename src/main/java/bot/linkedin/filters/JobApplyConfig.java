@@ -10,16 +10,16 @@ import java.util.List;
 @ConfigurationProperties("job.apply.config")
 public class JobApplyConfig {
 
-	/**
-	 * Applies jobs by clicking jobs, performing search query, applying advanced filters and starts applying jobs
-	 */
 	private boolean scanJobsInHomePage = false;
 
-	/**
-	 * Applies jobs by clicking jobs, performing search query, starts applying without applying advanced filters
-	 */
 	private boolean applyWithoutSearchFilter = false;
 
-	private List<String> manualJobsUrls = new ArrayList<>();
+	private boolean skipViewedJobs = false;
+
+	private int allowMaxYOE = 3;
+
+	private List<String> jobsUrls = new ArrayList<>();
+
+	private List<String> easyApplyJobUrls = new ArrayList<>();
 
 }

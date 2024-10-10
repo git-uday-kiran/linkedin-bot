@@ -14,10 +14,13 @@ import java.util.List;
 public class JobApplyFilterService {
 
 	private final JobsApplyFilter applyFilter;
+	private final YearMatcher yearMatcher;
 
 	public boolean canProcess(JobCard job) {
 		log.info("Filtering job: {}", job);
-		boolean canProcess = checkJobTitle(job.getTitle()) && checkJobDescription(job.getDescription());
+		boolean canProcess = checkJobTitle(job.getTitle())
+				&& checkJobDescription(job.getDescription())
+				&& checkExperienceLevel(job);
 		logProcess(canProcess);
 		return canProcess;
 	}
@@ -34,8 +37,12 @@ public class JobApplyFilterService {
 		return !includeWords.isEmpty() && excludeWords.isEmpty();
 	}
 
-	private boolean checkJobDescription(String jobDescription) {
+	public boolean checkJobDescription(String jobDescription) {
 		return jobDescMandatoryWordsExist(jobDescription) && jobDescExcludeWordsNotFound(jobDescription);
+	}
+
+	private boolean checkExperienceLevel(JobCard job) {
+		return yearMatcher.checkExperience(job.getLineSeparator(), job.getTitle(), job.getDescription());
 	}
 
 	private boolean jobDescExcludeWordsNotFound(String jobDescription) {

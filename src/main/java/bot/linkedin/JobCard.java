@@ -2,6 +2,7 @@ package bot.linkedin;
 
 import bot.enums.WorkType;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.WebElement;
 
@@ -10,6 +11,7 @@ import static bot.utils.ThroatUtils.throatLow;
 
 @Log4j2
 @Getter
+@Setter
 public class JobCard {
 
 	private String title;
@@ -21,6 +23,8 @@ public class JobCard {
 
 	private final BasePage basePage;
 	private WebElement jobElement;
+
+	private final char lineSeparator = '#';
 
 	public JobCard(BasePage basePage) {
 		this.basePage = basePage;
@@ -66,7 +70,7 @@ public class JobCard {
 	private void findAndStoreDescription() {
 		description = basePage.waitForElementPresence(JOB_DESCRIPTION)
 				.getText()
-				.replace('\n', '\t')
+				.replace('\n', lineSeparator)
 				.toLowerCase();
 	}
 

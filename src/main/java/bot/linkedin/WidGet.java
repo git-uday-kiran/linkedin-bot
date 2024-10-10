@@ -51,10 +51,7 @@ public class WidGet extends BasePage {
 			return Optional.of(new WidGet(driver, questionAnswer, radioOptionsQuestions, selectOptionsQuestions, inputQuestions, checkBoxQuestions));
 		}
 		throatLow();
-		while (true) {
-			boolean failure = tryClickDismiss().orElse(tryClickDone()).isFailure();
-			if (!failure) break;
-		}
+		doUntilSuccess(() -> tryClickDismiss().orElse(this::tryClickDone));
 		return Optional.empty();
 	}
 

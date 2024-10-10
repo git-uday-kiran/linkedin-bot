@@ -10,7 +10,8 @@ public interface Locations {
 	By SUBMIT_APPLICATION = By.xpath("//span[text()='Submit application']");
 	By CLOSE_WIDGET = By.xpath("//button[@aria-label='Dismiss']");
 	By CONTINUE_APPLYING = By.xpath("//span[text()='Continue applying']");
-	By JOB_CARDS_LOCATION = By.cssSelector("[data-view-name=\"job-card\"]");
+	By JOBS_LIST_LOCATION = By.cssSelector(".jobs-search-results-list");
+	By JOB_CARDS_LOCATION = By.xpath("//div[@data-view-name='job-card']");
 	By EASY_APPLY_MODEL = By.xpath("//div[@role='dialog']");
 	By JOB_DESCRIPTION = By.id("job-details");
 	By SHOW_ALL_LOCATION = By.cssSelector(".discovery-templates-vertical-list__footer > a");

@@ -1,6 +1,7 @@
 package bot.linkedin;
 
 import bot.enums.EasyApplyOption;
+import bot.linkedin.filters.JobApplyConfig;
 import bot.linkedin.filters.JobSearchFilter;
 import bot.linkedin.models.CanApply;
 import bot.linkedin.models.JobsApplied;
@@ -49,8 +50,9 @@ public class EasyJobApplier extends BasePage {
 	private final RadioOptionsQuestions radioOptionsQuestions;
 	private final InputQuestions inputQuestions;
 	private final CheckBoxQuestions checkBoxQuestions;
+	private final JobApplyConfig applyConfig;
 
-	public EasyJobApplier(WebDriver driver, Tasks tasks, QuestionAnswerService questionAnswer, JobsAppliedRepo appliedRepo, Sounds sounds, JobApplyFilterService filterService, CanApplyRepo canApplyRepo, JobsDayCountRepo jobsDayCountRepo, SelectOptionsQuestions selectOptionsQuestions, RadioOptionsQuestions radioOptionsQuestions, InputQuestions inputQuestions, CheckBoxQuestions checkBoxQuestions) {
+	public EasyJobApplier(WebDriver driver, Tasks tasks, QuestionAnswerService questionAnswer, JobsAppliedRepo appliedRepo, Sounds sounds, JobApplyFilterService filterService, CanApplyRepo canApplyRepo, JobsDayCountRepo jobsDayCountRepo, SelectOptionsQuestions selectOptionsQuestions, RadioOptionsQuestions radioOptionsQuestions, InputQuestions inputQuestions, CheckBoxQuestions checkBoxQuestions, JobApplyConfig applyConfig) {
 		super(driver);
 		this.tasks = tasks;
 		this.questionAnswer = questionAnswer;
@@ -63,6 +65,7 @@ public class EasyJobApplier extends BasePage {
 		this.radioOptionsQuestions = radioOptionsQuestions;
 		this.inputQuestions = inputQuestions;
 		this.checkBoxQuestions = checkBoxQuestions;
+		this.applyConfig = applyConfig;
 	}
 
 	public void apply(JobSearchFilter filter) {
@@ -102,11 +105,19 @@ public class EasyJobApplier extends BasePage {
 		sounds.finished();
 	}
 
-	public void gotToUrlsAndStartScanningJobs(List<String> links) {
-		for (String link : links) {
+	public void goToEachUrlStartScanningAndApplyEasyApplyJobs(List<String> jobsLinks) {
+		for (String link : jobsLinks) {
 			driver.get(link);
 			throatMedium();
-//			run(this::startCheckingJobs).orElseRun(logError());
+			run(this::startCheckingJobs).orElseRun(logError());
+			sounds.finished();
+		}
+	}
+
+	public void goToEachUrlAndApplyEasyApplyJob(List<String> easyApplyJobsLinks) {
+		for (String link : easyApplyJobsLinks) {
+			driver.get(link);
+			throatMedium();
 			processEasyApplyElementIfExist(new JobCard(this));
 			sounds.finished();
 		}
@@ -150,7 +161,7 @@ public class EasyJobApplier extends BasePage {
 
 	private void applyJob(JobCard job) {
 		if (job.isApplied()) return;
-		if (job.isViewed()) return;
+		if (applyConfig.isSkipViewedJobs() && job.isViewed()) return;
 
 		job.click();
 		if (filterService.canProcess(job)) {
@@ -198,7 +209,6 @@ public class EasyJobApplier extends BasePage {
 
 		for (int page = 1; page <= 100; page++) {
 			List<WebElement> jobs = getNewJobs();
-			log.info("Found {} jobs", jobs.size());
 			jobs.stream()
 					.peek(this::scrollIntoView)
 					.map(element -> new JobCard(element, this))
@@ -216,7 +226,9 @@ public class EasyJobApplier extends BasePage {
 	}
 
 	private List<WebElement> getNewJobs() {
-		return waitForPresence(JOB_CARDS_LOCATION);
+		List<WebElement> jobs = waitForPresence(JOB_CARDS_LOCATION);
+		log.info("Found {} jobs", jobs.size());
+		return jobs;
 	}
 
 	private boolean tryGotToPage(int page) {

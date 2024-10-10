@@ -1,6 +1,7 @@
 package bot.linkedin;
 
 
+import io.vavr.CheckedRunnable;
 import io.vavr.control.Try;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
@@ -125,6 +126,10 @@ public class BasePage {
 	public void findAndClick(By location) {
 		WebElement element = driver.findElement(location);
 		click(element);
+	}
+
+	public void doUntilSuccess(CheckedRunnable action) {
+		while (run(action).isFailure()) ;
 	}
 
 }

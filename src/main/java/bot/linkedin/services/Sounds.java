@@ -2,6 +2,8 @@ package bot.linkedin.services;
 
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.CompletableFuture;
+
 import static io.vavr.control.Try.run;
 
 @Service
@@ -22,8 +24,10 @@ public class Sounds {
 	}
 
 	public void playMusic(String fileName) {
-		Runtime runtime = Runtime.getRuntime();
-		String[] command = {"mplayer", MUSIC_DIR + fileName};
-		run(() -> runtime.exec(command));
+		CompletableFuture.runAsync(() -> {
+			Runtime runtime = Runtime.getRuntime();
+			String[] command = {"mplayer", MUSIC_DIR + fileName};
+			run(() -> runtime.exec(command));
+		});
 	}
 }
