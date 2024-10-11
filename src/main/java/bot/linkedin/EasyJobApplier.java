@@ -191,7 +191,7 @@ public class EasyJobApplier extends BasePage {
 	private void applyEasyApplyJob(WebElement easyApplyElement) {
 		log.info("Applying job... ");
 		click(easyApplyElement);
-		waitForElementPresence(EASY_APPLY_MODEL);
+		waitForVisible(waitForElementPresence(EASY_APPLY_MODEL));
 		Optional<WidGet> opWidGet = Optional.of(new WidGet(driver, questionAnswer, radioOptionsQuestions, selectOptionsQuestions, inputQuestions, checkBoxQuestions));
 		while (opWidGet.isPresent()) {
 			WidGet widGet = opWidGet.get();
@@ -218,9 +218,8 @@ public class EasyJobApplier extends BasePage {
 	}
 
 	public void tryClickEasyApplyFilter() {
-		tryClick(By.cssSelector("#search-reusables__filters-bar>ul>li:nth-child(7)>div>button"))
-				.orElse(tryClick(By.cssSelector(".scaffold-layout-toolbar>div>section>div>div>div>ul>li:nth-child(8)>div>button")))
-				.orElse(tryClick(By.linkText("Easy Apply")))
+		tryClick(By.xpath("//a[text()='Easy Apply']"))
+				.orElse(() -> tryClick(By.xpath("//button[text()='Easy Apply']")))
 				.andThen(ThroatUtils::throatMedium)
 				.orElseRun(logError("Tried finding and clicking Easy Apply button."));
 	}

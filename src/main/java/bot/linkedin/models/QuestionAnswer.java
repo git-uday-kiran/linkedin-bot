@@ -23,8 +23,13 @@ public class QuestionAnswer {
 	@Column(nullable = false, columnDefinition = "text(6000)")
 	String answer;
 
-	public QuestionAnswer(String question, String answer) {
+	@Enumerated(EnumType.STRING)
+	Tag tag;
+
+	public QuestionAnswer(String question, String answer, Tag tag) {
 		this.question = question;
 		this.answer = answer;
+		this.tag = tag;
 	}
+
 }

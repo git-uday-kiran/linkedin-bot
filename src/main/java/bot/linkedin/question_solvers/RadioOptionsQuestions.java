@@ -1,6 +1,7 @@
 package bot.linkedin.question_solvers;
 
 import bot.linkedin.BasePage;
+import bot.linkedin.models.Tag;
 import bot.linkedin.services.QuestionAnswerService;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
@@ -62,7 +63,7 @@ public class RadioOptionsQuestions extends BasePage {
 		var buttonsMap = mapOf(buttons);
 		var options = buttonsMap.keySet().stream().toList();
 
-		var answer = qaService.ask(label, options);
+		var answer = qaService.ask(label, options, Tag.FILL_UP_QA);
 		var answerButton = buttonsMap.get(answer);
 		scrollIntoView(answerButton).click();
 	}

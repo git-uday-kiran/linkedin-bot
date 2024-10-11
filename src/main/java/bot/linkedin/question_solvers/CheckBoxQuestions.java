@@ -1,6 +1,7 @@
 package bot.linkedin.question_solvers;
 
 import bot.linkedin.BasePage;
+import bot.linkedin.models.Tag;
 import bot.linkedin.services.QuestionAnswerService;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
@@ -62,7 +63,7 @@ public class CheckBoxQuestions extends BasePage {
 		var boxesMap = mapOf(boxes);
 		var options = boxesMap.keySet().stream().toList();
 
-		var boxesSelected = qaService.askCheckBoxOptionsAndNoCache(label, options);
+		var boxesSelected = qaService.askCheckBoxOptionsAndNoCache(label, options, Tag.FILL_UP_QA);
 		boxesSelected.stream()
 				.map(boxesMap::get)
 				.forEach(WebElement::click);

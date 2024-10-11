@@ -1,6 +1,7 @@
 package bot.linkedin.question_solvers;
 
 import bot.linkedin.BasePage;
+import bot.linkedin.models.Tag;
 import bot.linkedin.services.QuestionAnswerService;
 import io.vavr.control.Try;
 import lombok.extern.log4j.Log4j2;
@@ -51,19 +52,24 @@ public class InputQuestions extends BasePage {
 
 	private void solveDirectQuestion(WebElement question) {
 		String label = question.findElement(directLabelLocation).getText();
-		if (label.startsWith("City")) solveCityQuestion(question, label);
+		if (isCityQuestion(label)) solveCityQuestion(question, label);
 		else solveQuestionWithOnlyInput(question, label);
 	}
 
+	private static boolean isCityQuestion(String label) {
+		String lowerCase = label.toLowerCase();
+		return lowerCase.startsWith("city") || lowerCase.startsWith("location (city)");
+	}
+
 	private void solveQuestionWithOnlyInput(WebElement question, String label) {
-		String answer = qaService.ask(label);
+		String answer = qaService.ask(label, Tag.FILL_UP_QA);
 		WebElement input = question.findElement(inputLocation);
 		input.clear();
 		input.sendKeys(answer);
 	}
 
 	private void solveCityQuestion(WebElement question, String label) {
-		String city = qaService.ask(label);
+		String city = qaService.ask(label, Tag.FILL_UP_QA);
 		WebElement input = question.findElement(inputLocation);
 		input.sendKeys(city, Keys.ENTER);
 

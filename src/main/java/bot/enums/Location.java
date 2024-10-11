@@ -19,6 +19,7 @@ public enum Location {
 	TRIVANDRUM(By.xpath("//span[text()='Trivandrum']")),
 	KOCHI(By.xpath("//span[text()='Kochi']")),
 	DELHI(By.xpath("//span[text()='Delhi']")),
+	COIMBATORE(By.xpath("//span[text()='Coimbatore']")),
 	BENGALURU_NORTH(By.xpath("//span[text()='Bengaluru North']"));
 
 

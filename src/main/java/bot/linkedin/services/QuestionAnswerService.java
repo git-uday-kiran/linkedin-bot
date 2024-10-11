@@ -1,6 +1,7 @@
 package bot.linkedin.services;
 
 import bot.linkedin.models.QuestionAnswer;
+import bot.linkedin.models.Tag;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
@@ -27,16 +28,16 @@ public class QuestionAnswerService {
 		this.sounds = sounds;
 	}
 
-	public String ask(String question) {
-		return ask(question, Collections.emptyList());
+	public String ask(String question, Tag tag) {
+		return ask(question, Collections.emptyList(), tag);
 	}
 
-	public String ask(String question, List<String> options) {
+	public String ask(String question, List<String> options, Tag tag) {
 		System.out.println("Question: " + question);
 		if (options.isEmpty()) {
-			askQuestionByInput(question);
+			askQuestionByInput(question, tag);
 		} else {
-			askQuestionByOption(question, options);
+			askQuestionByOption(question, options, tag);
 		}
 		String answer = repo.findByQuestion(question).orElseThrow().getAnswer();
 		System.out.println("Answer: " + answer);
@@ -44,21 +45,21 @@ public class QuestionAnswerService {
 		return answer;
 	}
 
-	public void store(String question, String answer) {
+	public void store(String question, String answer, Tag tag) {
 		if (repo.findByQuestion(question).isPresent()) repo.deleteByQuestion(question);
-		repo.saveAndFlush(new QuestionAnswer(question, answer));
+		repo.saveAndFlush(new QuestionAnswer(question, answer, tag));
 	}
 
-	public Set<String> askCheckBoxOptionsAndNoCache(String question, List<String> options) {
+	public Set<String> askCheckBoxOptionsAndNoCache(String question, List<String> options, Tag tag) {
 		if (options.size() == 1) {
-			return Set.of(ask(question, options));
+			return Set.of(ask(question, options, tag));
 		}
 
 		StringJoiner joiner = new StringJoiner("\n");
 		IntStream.range(0, options.size()).forEach(id -> joiner.add(id + ". " + options.get(id)));
 
 		sounds.alert();
-		System.out.println("Enter an empty line to stop taking inputs.");
+		System.out.println("Enter multiple options, enter an empty line to stop taking inputs.");
 		System.out.println("Question: " + question);
 		System.out.println(joiner);
 
@@ -73,7 +74,7 @@ public class QuestionAnswerService {
 	}
 
 	private static Consumer<Throwable> handleNumberFormatException() {
-		return error -> System.out.println("Enter number format input.");
+		return _ -> System.out.println("Enter number format input.");
 	}
 
 	private static Callable<Integer> parseAsInteger(String line) {
@@ -85,16 +86,16 @@ public class QuestionAnswerService {
 	}
 
 
-	private void askQuestionByInput(String question) {
+	private void askQuestionByInput(String question, Tag tag) {
 		if (repo.findByQuestion(question).isEmpty()) {
 			sounds.alert();
 			System.out.print("Input: ");
 			String answer = ofCallable(reader::readLine).get();
-			store(question, answer);
+			store(question, answer, tag);
 		}
 	}
 
-	private void askQuestionByOption(String question, List<String> options) {
+	private void askQuestionByOption(String question, List<String> options, Tag tag) {
 		Optional<QuestionAnswer> byQuestion = repo.findByQuestion(question);
 		if (byQuestion.isEmpty() || !options.contains(byQuestion.get().getAnswer())) {
 			StringJoiner joiner = new StringJoiner("\n");
@@ -106,7 +107,7 @@ public class QuestionAnswerService {
 			sounds.alert();
 			System.out.println(joiner);
 			int input = askRangeInteger(options.size() - 1);
-			store(question, options.get(input));
+			store(question, options.get(input), tag);
 		}
 	}
 

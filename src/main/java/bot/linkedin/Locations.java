@@ -8,9 +8,8 @@ public interface Locations {
 	By NEXT = By.xpath("//span[text()='Next']");
 	By REVIEW = By.xpath("//span[text()='Review']");
 	By SUBMIT_APPLICATION = By.xpath("//span[text()='Submit application']");
-	By CLOSE_WIDGET = By.xpath("//button[@aria-label='Dismiss']");
+	By CLOSE_WIDGET = By.xpath("//button[@data-test-modal-close-btn]");
 	By CONTINUE_APPLYING = By.xpath("//span[text()='Continue applying']");
-	By JOBS_LIST_LOCATION = By.cssSelector(".jobs-search-results-list");
 	By JOB_CARDS_LOCATION = By.xpath("//div[@data-view-name='job-card']");
 	By EASY_APPLY_MODEL = By.xpath("//div[@role='dialog']");
 	By JOB_DESCRIPTION = By.id("job-details");

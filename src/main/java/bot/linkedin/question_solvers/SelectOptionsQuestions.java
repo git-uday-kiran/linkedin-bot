@@ -2,6 +2,7 @@ package bot.linkedin.question_solvers;
 
 
 import bot.linkedin.BasePage;
+import bot.linkedin.models.Tag;
 import bot.linkedin.services.QuestionAnswerService;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
@@ -48,23 +49,21 @@ public class SelectOptionsQuestions extends BasePage {
 		String title = question.findElement(titleLocation).getText();
 		String subTitle = question.findElement(subTitleLocation).getText();
 		String label = title + '\n' + subTitle;
-		solveQuestionWithOnlySelectOptions(question, label);
+		solveQuestionWithOnlySelectOptions(question, label, Tag.FILL_UP_QA);
 	}
 
 	private void solveDirectQuestion(WebElement question) {
 		String label = question.findElement(directLabelLocation).getText();
-		solveQuestionWithOnlySelectOptions(question, label);
+		solveQuestionWithOnlySelectOptions(question, label, Tag.FILL_UP_QA);
 	}
 
-
-	private void solveQuestionWithOnlySelectOptions(WebElement question, String label) {
-//		String label = question.findElement(directLabelLocation).getText();
+	private void solveQuestionWithOnlySelectOptions(WebElement question, String label, Tag tag) {
 		Select select = new Select(question.findElement(selectionLocation));
 
 		List<String> options = select.getOptions().stream()
 				.map(WebElement::getText)
 				.toList();
-		String answer = qaService.ask(label, options);
+		String answer = qaService.ask(label, options, tag);
 		select.selectByValue(answer);
 	}
 
