@@ -41,14 +41,23 @@ public class YearMatcher {
 			String line = prefixUntilLineEnd(text, matcher1.start() - 1) + yoe + suffixUntilLineEnd(text, matcher1.end());
 			log.info("Found YOE: {}, Matched line: {}", yoe, line);
 			int year = getMinYearByMatcher1(matcher1);
-			boolean isOkay = (year <= applyConfig.getAllowMaxYOE()) || confirmProceed(line);
+			boolean okayToProceed = isOkayToProceed(year, line);
 
-			if (!isOkay) {
-				log.warn("Experience is not okay: {}", yoe);
+			if (!okayToProceed) {
+				log.warn("Not proceeding with YOE: {}", yoe);
 				return false;
 			}
 		}
 		return true;
+	}
+
+	private boolean isOkayToProceed(int year, String line) {
+		if (year <= applyConfig.getAllowMaxYOE()) return true;
+		if (line.matches(".*\\bexp.*")) {
+			log.info("Found 'exp' word with undesired experience, bypassing confirmation.");
+			return false;
+		}
+		return confirmProceed(line);
 	}
 
 	private static int getMinYearByMatcher1(Matcher matcher1) {
@@ -80,7 +89,7 @@ public class YearMatcher {
 		while (position >= 0 && data.charAt(position) != LINE_SEPARATOR) {
 			builder.append(data.charAt(position--));
 		}
-		return builder.toString();
+		return builder.reverse().toString();
 	}
 
 	private String suffixUntilLineEnd(String data, int position) {
