@@ -14,8 +14,6 @@ public class JobApplyConfig {
 
 	private boolean applyWithoutSearchFilter = false;
 
-	private boolean clickJobsAndApply = false;
-
 	private boolean skipViewedJobs = false;
 
 	private int allowMaxYOE = 3;
