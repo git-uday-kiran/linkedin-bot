@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 @Log4j2
 @Service
 @RequiredArgsConstructor
-public class YearMatcher {
+public class ExperienceChecker {
 
 	private final String regex = "((\\b\\d{1,3}\\b ?(to|-) ?\\b\\d{1,3}\\b)|(\\b\\d{1,3}\\b) *\\+?) *(yrs|years?|YOE)";
 	private final char LINE_SEPARATOR = '\n';

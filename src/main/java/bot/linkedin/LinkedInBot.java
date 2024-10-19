@@ -38,6 +38,9 @@ public class LinkedInBot extends BasePage implements ApplicationRunner {
 		if (searchFilter.getEasyApply() == EasyApplyOption.ENABLE) {
 			applier.apply(searchFilter);
 		}
+		if (applyConfig.isClickJobsAndApply()) {
+			applier.clickJobsAndApply();
+		}
 		if (applyConfig.isApplyWithoutSearchFilter()) {
 			applier.applyWithoutSearchFilter(searchFilter.getSearchQuery());
 		}

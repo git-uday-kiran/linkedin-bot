@@ -94,6 +94,16 @@ public class EasyJobApplier extends BasePage {
 		sounds.finished();
 	}
 
+	public void clickJobsAndApply() {
+		log.info("Applying jobs directly by clicking jobs option");
+		tasks.goToHomePage();
+		tasks.clickJobs();
+		throatMedium();
+		tryClickEasyApplyFilter();
+		run(this::startCheckingJobs).orElseRun(logError());
+		sounds.finished();
+	}
+
 	public void applyJobsInHomePage() {
 		log.info("Applying jobs in home page");
 		tasks.goToHomePage();
@@ -217,7 +227,7 @@ public class EasyJobApplier extends BasePage {
 		}
 	}
 
-	public void tryClickEasyApplyFilter() {
+	private void tryClickEasyApplyFilter() {
 		tryClick(By.xpath("//a[text()='Easy Apply']"))
 				.orElse(() -> tryClick(By.xpath("//button[text()='Easy Apply']")))
 				.andThen(ThroatUtils::throatMedium)

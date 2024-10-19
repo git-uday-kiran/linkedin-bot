@@ -12,9 +12,10 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class JobApplyFilterService {
-
 	private final JobsApplyFilter applyFilter;
-	private final YearMatcher yearMatcher;
+
+	private final ExperienceChecker experienceChecker;
+	private final RegexUtils regexUtils;
 
 	public boolean canProcess(JobCard job) {
 		log.info("Filtering job: {}", job);
@@ -25,24 +26,37 @@ public class JobApplyFilterService {
 		return canProcess;
 	}
 
+	private boolean checkExperienceLevel(JobCard job) {
+		return experienceChecker.checkExperience(job.getLineSeparator(), job.getTitle(), job.getDescription());
+	}
+
 	public boolean checkJobTitle(String jobTitle) {
-		List<String> includeWords = applyFilter.getJobTitle().getIncludeWords().stream()
-				.filter(jobTitle::contains).toList();
-		log.info("Job title include words found: {}", includeWords);
+		JobsApplyFilter.JobTitleFilter jobTitleConfig = applyFilter.getJobTitle();
 
-		List<String> excludeWords = applyFilter.getJobTitle().getExcludeWords().stream()
-				.filter(jobTitle::contains).toList();
-		log.info("Job title exclude words found: {}", excludeWords);
+		boolean allMandatoryWordsExits = regexUtils.containsWords(jobTitle, jobTitleConfig.getMandatoryWords());
+		log.info("Job title, all mandatory words found: {}", allMandatoryWordsExits);
 
-		return !includeWords.isEmpty() && excludeWords.isEmpty();
+		List<String> excludeWords = jobTitleConfig.getExcludeWords().stream()
+				.filter(word -> regexUtils.containsWord(jobTitle, word))
+				.toList();
+		log.info("Job title, exclude words found: {}", excludeWords);
+
+		List<String> includeWords = jobTitleConfig.getIncludeWords().stream()
+				.filter(jobTitle::contains)
+				.toList();
+		log.info("Job title, include words found: {}", includeWords);
+
+		return !includeWords.isEmpty() && excludeWords.isEmpty() && allMandatoryWordsExits;
 	}
 
 	public boolean checkJobDescription(String jobDescription) {
-		return jobDescMandatoryWordsExist(jobDescription) && jobDescExcludeWordsNotFound(jobDescription);
+		return jobDescAllMandatoryWordsExist(jobDescription) && jobDescExcludeWordsNotFound(jobDescription);
 	}
 
-	private boolean checkExperienceLevel(JobCard job) {
-		return yearMatcher.checkExperience(job.getLineSeparator(), job.getTitle(), job.getDescription());
+	private boolean jobDescAllMandatoryWordsExist(String jobDescription) {
+		boolean allMandatoryWordsExit = regexUtils.containsWords(jobDescription, applyFilter.getJobDesc().getMandatoryWords());
+		log.info("Job description, all mandatory words found: {}", allMandatoryWordsExit);
+		return allMandatoryWordsExit;
 	}
 
 	private boolean jobDescExcludeWordsNotFound(String jobDescription) {
@@ -50,17 +64,8 @@ public class JobApplyFilterService {
 				.getExcludeWords()
 				.stream()
 				.filter(jobDescription::contains).toList();
-		log.info("Job description exclude words found: {} ", excludeWordsFound);
+		log.info("Job description, exclude words found: {} ", excludeWordsFound);
 		return excludeWordsFound.isEmpty();
-	}
-
-	private boolean jobDescMandatoryWordsExist(String jobDescription) {
-		boolean allExist = applyFilter.getJobDesc()
-				.getMandatoryWords()
-				.stream()
-				.allMatch(jobDescription::contains);
-		log.info("All job description mandatory words found: {}", allExist);
-		return allExist;
 	}
 
 	private void logProcess(boolean status) {
