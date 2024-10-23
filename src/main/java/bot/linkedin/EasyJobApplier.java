@@ -11,6 +11,7 @@ import bot.linkedin.question_solvers.RadioOptionsQuestions;
 import bot.linkedin.question_solvers.SelectOptionsQuestions;
 import bot.linkedin.services.*;
 import bot.utils.ThroatUtils;
+import io.vavr.control.Try;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -29,7 +30,7 @@ import java.util.function.IntConsumer;
 import java.util.stream.IntStream;
 
 import static bot.linkedin.Locations.*;
-import static bot.utils.ThroatUtils.*;
+import static bot.utils.ThroatUtils.throatMedium;
 import static io.vavr.control.Try.run;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
@@ -51,8 +52,9 @@ public class EasyJobApplier extends BasePage {
 	private final InputQuestions inputQuestions;
 	private final CheckBoxQuestions checkBoxQuestions;
 	private final JobApplyConfig applyConfig;
+	private final JobSearchFilter jobSearchFilter;
 
-	public EasyJobApplier(WebDriver driver, Tasks tasks, QuestionAnswerService questionAnswer, JobsAppliedRepo appliedRepo, Sounds sounds, JobApplyFilterService filterService, CanApplyRepo canApplyRepo, JobsDayCountRepo jobsDayCountRepo, SelectOptionsQuestions selectOptionsQuestions, RadioOptionsQuestions radioOptionsQuestions, InputQuestions inputQuestions, CheckBoxQuestions checkBoxQuestions, JobApplyConfig applyConfig) {
+	public EasyJobApplier(WebDriver driver, Tasks tasks, QuestionAnswerService questionAnswer, JobsAppliedRepo appliedRepo, Sounds sounds, JobApplyFilterService filterService, CanApplyRepo canApplyRepo, JobsDayCountRepo jobsDayCountRepo, SelectOptionsQuestions selectOptionsQuestions, RadioOptionsQuestions radioOptionsQuestions, InputQuestions inputQuestions, CheckBoxQuestions checkBoxQuestions, JobApplyConfig applyConfig, JobSearchFilter jobSearchFilter) {
 		super(driver);
 		this.tasks = tasks;
 		this.questionAnswer = questionAnswer;
@@ -66,6 +68,7 @@ public class EasyJobApplier extends BasePage {
 		this.inputQuestions = inputQuestions;
 		this.checkBoxQuestions = checkBoxQuestions;
 		this.applyConfig = applyConfig;
+		this.jobSearchFilter = jobSearchFilter;
 	}
 
 	public void apply(JobSearchFilter filter) {
@@ -89,7 +92,7 @@ public class EasyJobApplier extends BasePage {
 		tasks.clickJobs();
 		tasks.performSearchQuery(searchQuery);
 		throatMedium();
-		tryClickEasyApplyFilter();
+		tryClickEasyApplyAndDatePostedFilter();
 		run(this::startCheckingJobs).orElseRun(logError());
 		sounds.finished();
 	}
@@ -148,7 +151,7 @@ public class EasyJobApplier extends BasePage {
 		driver.switchTo().window(tabs.getFirst());
 
 		throatMedium();
-		tryClickEasyApplyFilter();
+		tryClickEasyApplyAndDatePostedFilter();
 		run(this::startCheckingJobs).orElseRun(logError());
 		driver.close();
 		driver.switchTo().window(currentTab);
@@ -217,11 +220,28 @@ public class EasyJobApplier extends BasePage {
 		}
 	}
 
-	private void tryClickEasyApplyFilter() {
-		tryClick(By.xpath("//a[text()='Easy Apply']"))
-				.orElse(() -> tryClick(By.xpath("//button[text()='Easy Apply']")))
+	private void tryClickEasyApplyAndDatePostedFilter() {
+		tryClickEasyApply()
 				.andThen(ThroatUtils::throatMedium)
-				.orElseRun(logError("Tried finding and clicking Easy Apply button."));
+				.andThenTry(this::filterDatePosted)
+				.andThen(ThroatUtils::throatMedium)
+				.orElseRun(logError("Tried clicking easy apply and date posted filters"));
+	}
+
+	private Try<Void> tryClickEasyApply() {
+		return tryClick(By.xpath("//a[text()='Easy Apply']"))
+				.orElse(() -> tryClick(By.xpath("//button[text()='Easy Apply']")));
+	}
+
+	private void filterDatePosted() {
+		By datePostedButton = By.xpath("//button[text()='Date posted']");
+		By datePostedFilterValue = jobSearchFilter.getDatePosted().getLocation();
+		By showResults = By.cssSelector("form > .reusable-search-filters-trigger-dropdown__container > .reusable-search-filters-buttons>button:nth-child(2)");
+
+		click(datePostedButton);
+		click(datePostedFilterValue);
+		throatMedium();
+		click(showResults);
 	}
 
 	private List<WebElement> getNewJobs() {

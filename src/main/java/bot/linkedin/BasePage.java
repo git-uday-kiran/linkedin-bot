@@ -98,6 +98,10 @@ public class BasePage {
 		return run(() -> click(element));
 	}
 
+	public void click(By location) {
+		click(findElement(location));
+	}
+
 	public void click(WebElement element) {
 		String clicked = element.getText().replace('\n', ' ');
 		if (clicked.isEmpty()) clicked = element.getAccessibleName();
