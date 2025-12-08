@@ -2,78 +2,82 @@ package bot.linkedin.services;
 
 import bot.linkedin.JobCard;
 import bot.linkedin.filters.JobsApplyFilter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Log4j2
 @Service
-@RequiredArgsConstructor
 public class JobApplyFilterService {
-	private final JobsApplyFilter applyFilter;
+    private static final Logger log = org.apache.logging.log4j.LogManager.getLogger(JobApplyFilterService.class);
+    private final JobsApplyFilter applyFilter;
 
-	private final ExperienceChecker experienceChecker;
-	private final RegexUtils regexUtils;
+    private final ExperienceChecker experienceChecker;
+    private final RegexUtils regexUtils;
 
-	public boolean canProcess(JobCard job) {
-		log.info("Filtering job: {}", job);
-		boolean canProcess = checkJobTitle(job.getTitle())
-				&& checkJobDescription(job.getDescription())
-				&& checkExperienceLevel(job);
-		logProcess(canProcess);
-		return canProcess;
-	}
+    public JobApplyFilterService(JobsApplyFilter applyFilter, ExperienceChecker experienceChecker, RegexUtils regexUtils) {
+        this.applyFilter = applyFilter;
+        this.experienceChecker = experienceChecker;
+        this.regexUtils = regexUtils;
+    }
 
-	private boolean checkExperienceLevel(JobCard job) {
-		return experienceChecker.checkExperience(job.getLineSeparator(), job.getTitle(), job.getDescription());
-	}
+    public boolean canProcess(JobCard job) {
+        log.info("Filtering job: {}", job);
+        boolean canProcess = checkJobTitle(job.getTitle())
+                && checkJobDescription(job.getDescription())
+                && checkExperienceLevel(job);
+        logProcess(canProcess);
+        return canProcess;
+    }
 
-	public boolean checkJobTitle(String jobTitle) {
-		JobsApplyFilter.JobTitleFilter jobTitleConfig = applyFilter.getJobTitle();
+    private boolean checkExperienceLevel(JobCard job) {
+        return experienceChecker.checkExperience('\n', job.getTitle(), job.getDescription());
+    }
 
-		boolean allMandatoryWordsExits = regexUtils.containsWords(jobTitle, jobTitleConfig.getMandatoryWords());
-		log.info("Job title, all mandatory words found: {}", allMandatoryWordsExits);
+    public boolean checkJobTitle(String jobTitle) {
+        JobsApplyFilter.JobTitleFilter jobTitleConfig = applyFilter.getJobTitle();
 
-		List<String> excludeWords = jobTitleConfig.getExcludeWords().stream()
-				.filter(word -> regexUtils.containsWord(jobTitle, word))
-				.toList();
-		log.info("Job title, exclude words found: {}", excludeWords);
+        boolean allMandatoryWordsExits = regexUtils.containsWords(jobTitle, jobTitleConfig.getMandatoryWords());
+        log.info("Job title, all mandatory words found: {}", allMandatoryWordsExits);
 
-		List<String> includeWords = jobTitleConfig.getIncludeWords().stream()
-				.filter(jobTitle::contains)
-				.toList();
-		log.info("Job title, include words found: {}", includeWords);
+        List<String> excludeWords = jobTitleConfig.getExcludeWords().stream()
+                .filter(word -> regexUtils.containsWord(jobTitle, word))
+                .toList();
+        log.info("Job title, exclude words found: {}", excludeWords);
 
-		return !includeWords.isEmpty() && excludeWords.isEmpty() && allMandatoryWordsExits;
-	}
+        List<String> includeWords = jobTitleConfig.getIncludeWords().stream()
+                .filter(jobTitle::contains)
+                .toList();
+        log.info("Job title, include words found: {}", includeWords);
 
-	public boolean checkJobDescription(String jobDescription) {
-		return jobDescAllMandatoryWordsExist(jobDescription) && jobDescExcludeWordsNotFound(jobDescription);
-	}
+        return !includeWords.isEmpty() && excludeWords.isEmpty() && allMandatoryWordsExits;
+    }
 
-	private boolean jobDescAllMandatoryWordsExist(String jobDescription) {
-		boolean allMandatoryWordsExit = regexUtils.containsWords(jobDescription, applyFilter.getJobDesc().getMandatoryWords());
-		log.info("Job description, all mandatory words found: {}", allMandatoryWordsExit);
-		return allMandatoryWordsExit;
-	}
+    public boolean checkJobDescription(String jobDescription) {
+        return jobDescAllMandatoryWordsExist(jobDescription) && jobDescExcludeWordsNotFound(jobDescription);
+    }
 
-	private boolean jobDescExcludeWordsNotFound(String jobDescription) {
-		var excludeWordsFound = applyFilter.getJobDesc()
-				.getExcludeWords()
-				.stream()
-				.filter(jobDescription::contains).toList();
-		log.info("Job description, exclude words found: {} ", excludeWordsFound);
-		return excludeWordsFound.isEmpty();
-	}
+    private boolean jobDescAllMandatoryWordsExist(String jobDescription) {
+        boolean allMandatoryWordsExit = regexUtils.containsWords(jobDescription, applyFilter.getJobDesc().getMandatoryWords());
+        log.info("Job description, all mandatory words found: {}", allMandatoryWordsExit);
+        return allMandatoryWordsExit;
+    }
 
-	private void logProcess(boolean status) {
-		if (status) {
-			log.info("Job is suitable");
-		} else {
-			log.warn("Job is not suitable");
-		}
-	}
+    private boolean jobDescExcludeWordsNotFound(String jobDescription) {
+        var excludeWordsFound = applyFilter.getJobDesc()
+                .getExcludeWords()
+                .stream()
+                .filter(jobDescription::contains).toList();
+        log.info("Job description, exclude words found: {} ", excludeWordsFound);
+        return excludeWordsFound.isEmpty();
+    }
+
+    private void logProcess(boolean status) {
+        if (status) {
+            log.info("Job is suitable");
+        } else {
+            log.warn("Job is not suitable");
+        }
+    }
 
 }
